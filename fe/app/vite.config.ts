@@ -14,4 +14,7 @@ export default defineConfig({
       '@': path.resolve(projectDir, 'src'),
     },
   },
+  server: {
+    port: 8484,
+  },
 })
