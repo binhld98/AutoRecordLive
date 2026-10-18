@@ -14,6 +14,12 @@ Build an application that lets users:
 - `be/` — back-end services, live-status monitoring, recording orchestration, and related APIs.
 - `docs/` — product, architecture, and development documentation.
 
+## Front-End Development Workflow
+
+- Use `fe` as the default branch for SPA development in `fe/`.
+- Start front-end work from `fe` in a dedicated Git worktree.
+- Keep the work in that worktree available for review. Merge it back into `fe` only after the user has reviewed and verified the work and approved the merge.
+
 ## Commit Messages
 
 Use this format:
