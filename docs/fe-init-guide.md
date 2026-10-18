@@ -48,9 +48,16 @@ npx shadcn@latest init
 
 This prepares the component configuration and shared styling conventions. Individual UI components can be added as product screens need them.
 
-## 4. Replace the starter screen
+## 4. Clean the starter scaffold
 
-Change `src/App.tsx` to render a plain Hello World heading. Keep this first screen intentionally small; the route layouts and product pages described in the architecture document can be added in later work.
+Replace `src/App.tsx` with a plain Hello World heading, then remove starter files and generated components that the screen does not use. For this initial screen, remove:
+
+- `src/App.css`
+- `src/assets/hero.png`, `src/assets/react.svg`, and `src/assets/vite.svg`
+- `public/icons.svg`
+- `src/components/ui/button.tsx`
+
+Keep this first screen intentionally small. Route layouts and product pages described in the architecture document can be added in later work.
 
 ## 5. Add app onboarding information
 
