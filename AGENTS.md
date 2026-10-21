@@ -19,6 +19,7 @@ Build an application that lets users:
 - Use `fe` as the default branch for SPA development in `fe/`.
 - Start front-end work from `fe` in a dedicated Git worktree.
 - Keep the work in that worktree available for review. Merge it back into `fe` only after the user has reviewed and verified the work and approved the merge.
+- After the merge, remove the worktree and delete its branch.
 
 ## Commit Messages
 
