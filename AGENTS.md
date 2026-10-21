@@ -28,7 +28,7 @@ Use this format:
 <type>[optional scope]: <short description>
 ```
 
-Keep the message to one lowercase line, ideally 50 characters or fewer. Do not add a body or footer.
+Keep the subject to one lowercase line, ideally 50 characters or fewer. Do not add a body or footer, except for an optional `Co-Authored-By:` trailer, separated from the subject by a blank line.
 
 Allowed types:
 
