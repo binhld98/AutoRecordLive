@@ -14,12 +14,13 @@ Build an application that lets users:
 - `be/` — back-end services, live-status monitoring, recording orchestration, and related APIs.
 - `docs/` — product, architecture, and development documentation.
 
-## Front-End Development Workflow
+## Development Workflow
 
-- Use `fe` as the default branch for SPA development in `fe/`.
-- Start front-end work from `fe` in a dedicated Git worktree.
-- Keep the work in that worktree available for review. Merge it back into `fe` only after the user has reviewed and verified the work and approved the merge.
-- After the merge, remove the worktree and delete its branch.
+- `main` is the only long-lived branch and must stay releasable.
+- Do each piece of work in its own `<type>/<slug>` branch from `main`, such as `feat/follow-channel`.
+- Open a PR into `main` and squash merge it only after the user approves. Then delete the branch.
+- Release by tagging `main` with a version (e.g. `v0.3.0`) only when the user asks.
+- Hotfix an old release: fix on `main`, cherry-pick into a release branch from its tag (e.g. `release/v0.3.x`), and tag the next patch (e.g. `v0.3.1`).
 
 ## Commit Messages
 
