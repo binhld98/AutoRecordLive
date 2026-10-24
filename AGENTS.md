@@ -18,8 +18,8 @@ Build an application that lets users:
 
 - `main` is the only long-lived branch and must stay releasable.
 - Do each piece of work in its own `<type>/<slug>` branch from `main`, such as `feat/follow-channel`.
-- Once the user has reviewed and approved the work, commit it, push the branch, and open a PR into `main` without waiting to be asked. Request review from the code owners in `.github/CODEOWNERS` when the file exists and the owner isn't the PR author.
-- Never merge the PR yourself. The user reviews, squash merges, and deletes the remote branch on GitHub.
+- When the user approved the work, commit it, push the branch, and open a PR into `main`.
+- Never merge the PR yourself. The user squash merges and deletes the remote branch on GitHub.
 - When the user confirms the PR is done, switch to `main`, pull it, and delete the local branch.
 - Release by tagging `main` with a version (e.g. `v0.3.0`) only when the user asks.
 - Hotfix an old release: fix on `main`, cherry-pick into a release branch from its tag (e.g. `release/v0.3.x`), and tag the next patch (e.g. `v0.3.1`).
