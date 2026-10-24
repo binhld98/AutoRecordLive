@@ -15,6 +15,8 @@ These come from the reference app's weak spots. Check every screen against them.
 4. **No dead ends.** Every disabled or expired item says why and what to do next.
 5. **Words over cryptic icons.** Icon-only buttons get a tooltip and an accessible label.
 6. **Works at every width.** Nothing truncates important text at laptop width. Phones get a usable layout.
+7. **Private by default.** A recording belongs to the users who follow its host. Sharing is opt-in, per recording, and can be revoked. No session replay or third-party trackers.
+8. **Nothing disappears silently.** Warn before recording time runs out and before a recording expires. When a recording has a gap or fails, say where, why, and what we did about it.
 
 ## What we do better
 
@@ -47,6 +49,25 @@ How we fix each known issue from the [reference app study](./ref-app-study.md#kn
 | R23 Recordings filter by platform only | Search, platform and host filters (step 4). The host filter shows as a removable chip, and host cards link to it. Sort by newest or longest | 4 |
 | R24 Abandoned checkout stuck on "Pending" | Unpaid checkouts expire and show as "Canceled" | Later |
 | R25 Session replay without consent | No session replay. If we add analytics, use a cookie-free tool that needs no consent prompt | Later |
+
+## Where we go further
+
+Fixing R1–R25 gets us level with the reference. These upgrades put us ahead. Each one answers something the [study](./ref-app-study.md) found: a weak spot, or an asset the reference has but barely uses.
+
+| Upgrade | What it is | Answers | Step |
+| --- | --- | --- | --- |
+| Recording health | Each recording shows how much of the broadcast it captured. Gaps are marked on the player's timeline with the reason ("stream dropped for 40 s, reconnected"). A reconnect during the same broadcast continues the same recording instead of starting a new part | Operator-only repair tools, unbuilt "Abnormal Issues", confusing parts (R12) | 2, 4, BE |
+| Instant download | Record HLS as fragmented MP4 (CMAF) segments. A download is the init segment plus the media segments, streamed by the API as one `.mp4`. It starts at once: no export job, no "your file is ready" email, no 36-hour cache | Exports that queue, then expire | 4, BE |
+| Usage forecast | The overview says "At this pace your recording time runs out on Oct 28" and shows usage per host. Warnings arrive at 80% and 100% before any listener stops | Listening stops without warning when the quota runs out | 5, BE |
+| Live alerts | A "host went live" notification with a link to the live stream, with per-host settings for in-app, email, Telegram, Discord webhook, and browser push | Only account-wide email settings | 6, P3 |
+| Watch while recording | Play a recording while it's still in progress; the uploader keeps the HLS playlist growing as segments arrive | You wait for the stream to end | P3 |
+| Clips | Download a chapter or a time range instead of the whole file. With short (about 6 s) segments, a clip is a slice of the segment list and costs only its own bytes against the download quota | Whole-file exports cut short by the quota; 60 s segments | P3 |
+| Share links | Share one recording or clip through an unlisted link that expires and can be revoked | Everything public by default (R14) | P3 |
+| Find the moment | ⌘K searches the transcripts of all your recordings. Each result shows the spoken line and opens the player at that second | Transcripts that are generated but only used as (blocked) captions | P3 |
+| Keep your recordings | Copy each finished recording to the user's own storage (Google Drive, Dropbox, or an S3 bucket), so it outlives the plan's retention | Recordings deleted after 3–90 days, sometimes silently (R16) | P3 |
+| Smarter live checks | Check each host more often around the times it usually goes live, so recordings start sooner. A heatmap shows those times and guesses the next stream | Stale status (R2), missed openings | P3 |
+| Recording rules | Per host: only record during certain hours, a maximum length, a quality setting, or only when the stream title matches a keyword | "Record Rules" strings, never built (R11) | P3 |
+| Resume after upgrade | When a limit blocks an action, the upgrade page remembers it and finishes it after payment, e.g. restarts the stopped listener. This is the reference's best pattern, so we copy it | — | Later |
 
 ## Routes
 
@@ -94,9 +115,11 @@ npm install @tanstack/react-query
 - `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference [data shapes](./ref-app-study.md#data-shapes) but in `camelCase`. Add what the reference lacks:
   - `Host.liveStatus` (`live`, `offline`, `unknown`) and `Host.lastCheckedAt` (for R2).
   - `Recording.chapters` (`{ startSec, title }[]`, for step 4).
+  - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health) and `Recording.downloadUrl` (instant download).
+  - `Quota.runsOutAt`: when recording time runs out at the current pace, or `null` (for the usage forecast).
 - `src/lib/api.ts`, the fake API:
   - Hosts: `listHosts()` (the whole list), `inspectUrls(urls)`, `addHosts(urls)`, `stopHost(id)`, `startHost(id)`, `removeHost(id)`.
-  - Recordings: `listRecordings(filters, cursor?)`, `getRecording(id)`, `requestExport(id)`, `getExportStatus(id)`.
+  - Recordings: `listRecordings(filters, cursor?)`, `getRecording(id)`.
   - Notifications: `listNotifications(cursor?)`, `markRead(id)`, `markAllRead()`, `getNotificationSettings()`, `updateNotificationSettings(settings)`.
   - Other: `getQuota()`, `getOverview(since)`.
   - Paged lists return `{ items, nextCursor, total }`.
@@ -137,7 +160,9 @@ npm install hls.js
 
 - **List page:** search, platform and host filters, a "Show expired" switch (off by default), the result count from `total`, and a card grid with "Load more" (`useInfiniteQuery`). Each card has a thumbnail with platform tag and duration, title, host · date, size, and one retention line. Expired cards are dimmed and say why they can't be played.
 - **Detail page:** two columns on desktop, stacked on mobile.
-  - Left: header (Back, platform, title, host, date), then a `<video>` player that fits portrait and landscape video without empty space, then Download with its export states (request, preparing, ready, failed). Use hls.js when `Hls.isSupported()`, else native HLS; destroy the hls.js instance when the page unmounts.
+  - Left: header (Back, platform, title, host, date), then a `<video>` player that fits portrait and landscape video without empty space. Use hls.js when `Hls.isSupported()`, else native HLS; destroy the hls.js instance when the page unmounts.
+  - Under the player, a coverage bar marks the recorded spans and the gaps from `Recording.gaps`; hovering a gap says why it happened. When there are gaps, the list card says "96% captured".
+  - **Download** is a plain link to `Recording.downloadUrl` that starts at once. There's no export step to wait for.
   - Right: a chapter list. Clicking a chapter sets `video.currentTime`; the current chapter is highlighted as the video plays. Metadata goes below it.
 
 For a test video, any public `.m3u8` sample stream with CORS enabled works.
@@ -149,13 +174,14 @@ The reference doesn't have this page. It reads one `getOverview(since)` call, be
 - Stat cards: live now, recording now, recordings today, failures in the last 24 h.
 - A "Live now" strip of hosts currently being recorded, linking to their hosts.
 - The latest recordings.
-- Anything that needs attention: failed recordings, hosts stopped because the quota ran out.
+- Anything that needs attention: failed recordings, recordings with gaps, hosts stopped because the quota ran out.
+- Usage: time used, the forecast from `Quota.runsOutAt` ("At this pace your recording time runs out on Oct 28"), and usage per host.
 
 ### Step 6 — Notifications (`feat/notifications`)
 
 - List with level-tinted rows, "Load more" (`useInfiniteQuery`), and mark all read.
 - Unread count badge in the sidebar.
-- Settings dialog with switches for recording started / completed / failed and download usage warning.
+- Settings dialog with switches for host went live, recording started / completed / failed, and usage warnings (80% and 100%), plus per-host overrides.
 - Wire the ⌘K search from step 1 to hosts and recordings.
 
 ### Step 7 — Auth (`feat/auth`)
@@ -174,8 +200,9 @@ Start once the hosts and recordings pages work on fake data, so you know exactly
 | API server | Served under `/api` on the app's origin. Auth (JWT access token + refresh cookie), hosts, recordings, notifications, SSE events. `camelCase` JSON, cursor pagination for paged lists |
 | Database | PostgreSQL. Separate `channels` (a streamer on a platform) from `subscriptions` (a user follows a channel), so a streamer followed by many users is checked and recorded once. Plus users, recordings, recording parts, chapters, notifications |
 | Monitor worker | Checks each channel that has at least one active subscription, at a rate the platform tolerates. Stores `lastCheckedAt` and computes `liveStatus`, which is `unknown` once a check is overdue |
-| Recorder worker | When a channel goes live, records with `ffmpeg` (or `streamlink` / `yt-dlp`) as HLS segments **to local disk**. An uploader sends each finished segment and the updated playlist to S3-compatible object storage (e.g. Backblaze B2 or Cloudflare R2). If the worker crashes mid-stream, the next attempt starts a new recording part. When the stream ends, it writes the thumbnail, duration, and size |
+| Recorder worker | When a channel goes live, records with `ffmpeg` (or `streamlink` / `yt-dlp`) as HLS with fragmented MP4 segments of about 6 s, **to local disk**. An uploader sends each finished segment and the updated playlist to S3-compatible object storage (e.g. Backblaze B2 or Cloudflare R2). If the stream drops or the worker crashes, the next attempt continues the same recording after an `#EXT-X-DISCONTINUITY` tag and saves the gap with its reason. A new part starts only when the stream's format changes, because the download needs one init segment. When the stream ends, it writes the thumbnail, duration, and size. It checks the quota before each segment and stops at the limit |
 | Playback | `GET /api/recordings/:id/playlist.m3u8` returns the playlist with every segment rewritten to a signed URL that stays valid for the recording's length plus a margin, because hls.js won't fetch a finished playlist again. The bucket's CORS allows our origin |
+| Downloads | `GET /api/recordings/:id/download.mp4` streams the init segment and then every media segment from storage as one file, and counts the bytes against the download quota. A time range (for clips) streams only its segments |
 
 Build order:
 
@@ -184,25 +211,23 @@ Build order:
 3. Monitor for one platform.
 4. Recorder and uploader for one platform.
 5. Recordings API and signed playlists.
-6. Exports and notifications (in-app and email).
+6. Downloads, usage warnings, and notifications (in-app and email).
 7. AI content: transcribe each recording and generate its summary and chapters. The reference already has summaries, outlines, highlights, FAQs, and transcripts; step 4 builds the chapter UI with fake data.
 8. Real-time: `POST /api/realtime/ticket` and `GET /api/events` (SSE with heartbeats; the proxy must not buffer it). Tickets are single-use, so the client reconnects with a fresh ticket instead of relying on `EventSource`'s auto-reconnect. Once the front end reacts to events, remove its 30 s polling.
 
 ## Phase 3 — Beyond the reference
 
-Features the reference app doesn't have. Each needs the back end first.
+The upgrades marked P3 in [Where we go further](#where-we-go-further). Each needs the back end first. Build them in this order:
 
-| Feature | What it is |
-| --- | --- |
-| Watch while recording | Play a recording while it's still in progress; the uploader keeps the HLS playlist growing as segments arrive |
-| Clips and partial download | Download one chapter or a time range instead of the whole file. Saves the user's download quota |
-| Recording rules | Per host: only record during certain hours, a maximum length, a quality setting, or only when the stream title matches a keyword |
-| More notification channels | Telegram, Discord webhook, and browser push, alongside email |
-| Live schedule insights | A heatmap of when each host usually goes live, and a guess at the next stream |
-| Organize recordings | Tags, favorites, and search across transcripts |
+1. Watch while recording: the playlist grows as segments arrive.
+2. Clips, then share links: a share link can point to a clip.
+3. Find the moment: needs the transcripts from build order 7.
+4. Live alerts beyond email: Telegram, Discord webhook, browser push.
+5. Keep your recordings.
+6. Smarter live checks, then recording rules: both change how the monitor and recorder decide what to do.
 
 ## Later
 
-Plans and quotas, billing (Stripe), retention and auto-delete, more platforms (YouTube, Twitch), i18n, and an admin console.
+Plans and quotas, billing (Stripe) with resume after upgrade, retention and auto-delete, more platforms (YouTube, Twitch), a Chinese UI for Douyin users, and an admin console.
 
 The reference product limits itself to streams you own or have permission to record. Keep the same rule in our terms of use, and check each platform's terms before adding it.
