@@ -115,7 +115,8 @@ npm install @tanstack/react-query
 - `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference [data shapes](./ref-app-study.md#data-shapes) but in `camelCase`. Add what the reference lacks:
   - `Host.liveStatus` (`live`, `offline`, `unknown`) and `Host.lastCheckedAt` (for R2).
   - `Recording.chapters` (`{ startSec, title }[]`, for step 4).
-  - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health) and `Recording.downloadUrl` (instant download).
+  - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health).
+  - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself ([`fe-arch.md`](./fe-arch.md#key-decisions)).
   - `Quota.runsOutAt`: when recording time runs out at the current pace, or `null` (for the usage forecast).
 - `src/lib/api.ts`, the fake API:
   - Hosts: `listHosts()` (the whole list), `inspectUrls(urls)`, `addHosts(urls)`, `stopHost(id)`, `startHost(id)`, `removeHost(id)`.
