@@ -2,7 +2,7 @@
 
 This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
-- What the reference app does, and its known issues (R1–R14): [reference app study](./reference-app.md)
+- What the reference app does, and its known issues (R1–R25): [reference app study](./ref-app-study.md)
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
 
 ## Product principles
@@ -18,7 +18,7 @@ These come from the reference app's weak spots. Check every screen against them.
 
 ## What we do better
 
-How we fix each known issue from the [reference app study](./reference-app.md#known-issues), and the step where it happens.
+How we fix each known issue from the [reference app study](./ref-app-study.md#known-issues), and the step where it happens.
 
 | Issue | Our fix | Step |
 | --- | --- | --- |
@@ -36,6 +36,17 @@ How we fix each known issue from the [reference app study](./reference-app.md#kn
 | R12 Mixed pagination and field names | One cursor style for every paged list; the API sends `camelCase` | 2, BE |
 | R13 Tokens readable by scripts | Access token in memory only; refresh token in an `httpOnly` cookie on the same origin | 7, BE |
 | R14 Recordings public by default | Recordings are private to the users who follow the host. No public pages; the recordings API only returns the caller's | BE |
+| R15 Expiry only cosmetic | When retention ends, the API stops serving the playlist, segments, AI content, and transcript, and the files are deleted | Later |
+| R16 Recordings vanish without warning | A notification before a recording expires. A link to a deleted recording opens a page that says when and why it was deleted | 4, 6, Later |
+| R17 Filters list platforms we can't add | One list of supported platforms feeds both the URL parser and the platform filters | 3, 4 |
+| R18 Fragile playback, blocked captions | Signed segment URLs last the recording's length plus a margin. Subtitles come from `/api` on our origin. On an error, the player reloads the playlist and resumes at the same time before showing a message | 4, BE |
+| R19 No password reset or account controls | Forgot and reset password pages. `/account` adds change password and delete account | 7, BE |
+| R20 Trial overshoots its quota | The recorder checks the quota before each segment and stops at the limit, so usage never goes past it | BE |
+| R21 Room title used as the streamer's name | Notifications and previews name the host (display name and `@username`) and show the room title separately | 3, 6 |
+| R22 Misleading "listening enabled" | Each preview row says what Add will do: "Already in your hosts", "Will start listening", or "Will be saved, but listening is paused: no recording time left" | 3 |
+| R23 Recordings filter by platform only | Search, platform and host filters (step 4). The host filter shows as a removable chip, and host cards link to it. Sort by newest or longest | 4 |
+| R24 Abandoned checkout stuck on "Pending" | Unpaid checkouts expire and show as "Canceled" | Later |
+| R25 Session replay without consent | No session replay. If we add analytics, use a cookie-free tool that needs no consent prompt | Later |
 
 ## Routes
 
@@ -80,7 +91,7 @@ Goal: one place that defines the data, returns it, and keeps it fresh.
 npm install @tanstack/react-query
 ```
 
-- `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference [data shapes](./reference-app.md#data-shapes) but in `camelCase`. Add what the reference lacks:
+- `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference [data shapes](./ref-app-study.md#data-shapes) but in `camelCase`. Add what the reference lacks:
   - `Host.liveStatus` (`live`, `offline`, `unknown`) and `Host.lastCheckedAt` (for R2).
   - `Recording.chapters` (`{ startSec, title }[]`, for step 4).
 - `src/lib/api.ts`, the fake API:
