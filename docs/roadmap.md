@@ -4,6 +4,7 @@ This is the plan for getting from today's Hello World SPA to an AutoRecordLive t
 
 - What the reference app does, and its known issues (R1–R25): [reference app study](./ref-app-study.md)
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
+- How people move through the app: [user flows and sitemap](./user-flows.md)
 
 ## Product principles
 
