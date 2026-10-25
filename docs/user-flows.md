@@ -4,28 +4,34 @@ How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1
 
 ## Decisions
 
-**Hosts and recording**
+**Hosts and listeners**
 
-- **Following a host and recording it are separate.** We check the live status of every host you follow. Each host has **auto-record** on or off: on records every broadcast by itself, off only tells you it's live. You choose when adding hosts (on by default) and can change it any time.
-- **You can always record or stop by hand.** **Record now** starts recording a live host from that moment. **Stop recording** ends the current recording and keeps what was captured. After a manual stop, auto-record waits for the next broadcast instead of starting again.
-- **Recordings are shared but your actions are yours.** One recorder runs per broadcast for everyone who wants it. Your recording covers the time it recorded for you, your Stop doesn't stop anyone else's, and removing a recording hides it only for you.
-- **Removing a host keeps its recordings** until their retention ends. Adding the host again starts fresh with the auto-record choice in the Add dialog.
+- **Each host has a mode.** You pick it when adding hosts (Auto-record by default) and can change it any time.
+  - **Auto-record:** we check whether it's live and record every broadcast.
+  - **Notify only:** we check and tell you when it's live; you decide whether to press Record now.
+  - **Off:** saved in your list but not checked, so no live status, alerts, or recordings.
+- **Active listeners are a plan limit.** Each Auto-record or Notify only host uses one listener. Off hosts use none, so you can save as many hosts as you like. A host records one stream at a time, so your listener count is also the most hosts that can record at once.
+- **When every listener is in use,** new hosts are saved as Off, and switching a host on is disabled with the reason (flows 1 and 4).
+- **If your listener limit drops,** for example when a plan ends, the hosts switched on most recently turn Off until you're within it. A recording in progress finishes first, and a notification names the hosts.
+- **You can always record or stop by hand.** Record now starts recording a live host from that moment. Stop recording ends the current recording and keeps what was captured. After a manual stop, Auto-record waits for the next broadcast instead of starting again.
+- **Recordings are shared, but your actions are yours.** One recorder runs per broadcast for everyone who wants it. Your recording covers the time it recorded for you, your Stop doesn't stop anyone else's, and removing a recording hides it only for you.
+- **Removing a host keeps its recordings** until their retention ends, and frees its listener.
 
 **Recordings**
 
-- **The recording page is a simple editor.** A timeline under the player shows recorded spans, gaps, and chapters. Select one or more sections and download each as its own `.mp4`, or download the whole recording. Section edges snap to the recording's segments (about 6 s), so the file starts and ends where the timeline shows.
-- **Removed recordings go to a recycle bin.** You can restore them. They're deleted for good 30 days after removal, or when their retention ends if that comes first. There's no "delete forever" button.
+- **The recording page is a simple editor** (flow 3). Select one or more sections on the timeline and download each as its own `.mp4`, or download the whole recording. Section edges snap to the recording's segments (about 6 s), so the file starts and ends where the timeline shows.
+- **Removed recordings go to a recycle bin** (flow 5). You can restore them. They're deleted for good after 30 days, or when their retention ends if that's sooner. There's no "delete forever" button.
 - **Removing a recording doesn't give back recording time.** Time counts when it's recorded.
 
-**Limits**
+**Limits and usage**
 
-- **One limit: recording hours per month.** It resets monthly. Downloads are unlimited (rate-limited against abuse), and storage is capped by hours and retention, so there's no download or storage quota flow.
-- **Running out of hours pauses recording, never the app.** Warnings come at 80% and 100%. At the limit, recording stops, auto-record pauses, and Record now is disabled, each saying "No recording time left. Recording resumes on Nov 1." with a link to the plan section of `/account`. Its Upgrade button arrives with billing. Live status keeps updating, because checks don't use hours.
-- **Usage lives on the Overview and `/account`, not in the sidebar.**
+- **Two limits: recording hours per month and active listeners.** Hours reset monthly. Downloads are unlimited (rate-limited against abuse), and storage is capped by hours and retention, so there's no download or storage quota.
+- **Running out of hours pauses recording, never the app** (flow 7).
+- **Usage shows on the Overview and `/account` only.** Anywhere else, a limit appears only where it blocks something, saying why, with a link to the plan in `/account`. That page gets an Upgrade button once billing exists.
 
 **Accounts**
 
-- **Email is the account.** The same email signs in with Google or with a password, whichever the user likes.
+- **Email is the account.** The same email signs in with Google or with a password.
 - **Nothing works until the email is verified.** A signed-in but unverified user only sees `/verify-email`. Google sign-ins are verified already, and so is anyone who completes a password reset.
 - **Google sign-in on an unverified account takes it over.** Google proves the address, so we verify the account and drop its unproven password. This stops someone from registering another person's email first and keeping a way in.
 
@@ -35,7 +41,7 @@ A toast isn't a notification. Each kind of feedback has one job:
 
 | Kind | When | Where it lives |
 | --- | --- | --- |
-| **Toast** | Result of something you just did: hosts added, auto-record turned off, recording removed (with Undo) | Pops up once and disappears. Nothing is stored |
+| **Toast** | Result of something you just did: hosts added, a host's mode changed, recording removed (with Undo) | Pops up once and disappears. Nothing is stored |
 | **Notification** | Something happened without you: host went live, recording ready or failed, recording stopped at the limit, usage at 80% / 100%, recording expires soon | Stored in `/notifications` with an unread badge in the sidebar, plus email or other channels per the notification settings |
 | **Status** | What's true right now | On the item itself: badges on host cards, retention line on recording cards |
 
@@ -53,15 +59,15 @@ flowchart TD
     reset["/reset-password?token="]
   end
   subgraph App["App layout (verified): sidebar nav, header with ⌘K search and account menu"]
-    overview["/ Overview, with usage"]
+    overview["/ Overview"]
     hosts["/hosts"]
     add(["Add hosts dialog"])
-    recs["/recordings?host="]
+    recs["/recordings"]
     bin["/recordings/recycle-bin"]
     rec["/recordings/:id player and editor"]
     notifs["/notifications"]
     nsettings(["Notification settings dialog"])
-    account["/account: profile, sign-in methods, password, plan and usage, delete account"]
+    account["/account: profile, sign-in methods, password, plan, delete account"]
   end
   notfound["Not found: link to Overview"]
 
@@ -71,7 +77,7 @@ flowchart TD
   login -- "?redirect=" --> overview
   overview --> hosts & recs & account
   hosts --> add
-  hosts -- "N recordings" --> recs
+  hosts -- "N recordings, filtered to the host" --> recs
   recs --> rec
   recs --> bin
   bin -- "Restore" --> recs
@@ -81,7 +87,8 @@ flowchart TD
 
 - **Signed out:** every app route sends you to `/login?redirect=<path>`, and signing in returns you there.
 - **Signed in, unverified:** every app route shows `/verify-email` until the email is verified, then continues to where you were going.
-- **Sidebar:** Overview, Hosts, Recordings, Notifications (unread badge), Account. No usage card.
+- **Sidebar:** Overview, Hosts, Recordings, Notifications (unread badge), Account.
+- **Recordings filters:** which filters `/recordings` has, and their URL params, aren't decided yet.
 - **Recordings that aren't there:** a removed, expired, or deleted recording at `/recordings/:id` opens a page that says what happened, when, and what you can do (Restore, or back to Recordings), not the generic not-found page (R16).
 - **Removed from the reference:** `/add` and the export download route. Add hosts is a dialog on `/hosts`, and downloads start at once.
 
@@ -91,11 +98,11 @@ Every host card (and table row) answers three questions in words, with an icon b
 
 | Question | What it shows |
 | --- | --- |
-| Is it live? | "Live", "Offline · checked 2m ago", or "Last seen 8d ago" when the check is overdue (P1) |
+| Is it live? | "Live", "Offline · checked 2m ago", or "Last seen 8d ago" when a check is overdue (P1). Off hosts say "Not checked" instead |
 | Is it recording? | "Recording · 12:34" while recording for you |
-| Will it record when it goes live? | "Auto-record on", "Auto-record off", or "Auto-record paused: no recording time left" |
+| What happens when it goes live? | Its mode: "Auto-record", "Notify only", or "Off". "Auto-record paused: no recording time left" when hours run out |
 
-Actions: **Record now** (live and not recording), **Stop recording** (recording), the **auto-record** switch, **Remove**, and the "N recordings" link to its recordings. An unavailable action stays visible, disabled, with a tooltip that says why (P4).
+Actions: the **mode** picker, **Record now** (live and not recording), **Stop recording** (recording), **Remove**, and the "N recordings" link to its recordings. An unavailable action stays visible, disabled, with a tooltip that says why (P4).
 
 ## Core flows
 
@@ -109,30 +116,34 @@ flowchart TD
   inspect --> row{"Each row"}
   row -- "found" --> preview["Avatar, name, @username, live or not"]
   row -- "username on 2+ platforms" --> pick["Platform picker on the row"] --> preview
-  row -- "not found / unsupported" --> err["Friendly reason, row skipped on Add"]
-  preview --> auto["Switch for all rows: 'Record automatically when live' (on by default)"]
-  auto --> will["Row says what Add will do:<br/>'Will record when live' / 'Will follow without recording' /<br/>'Already in your hosts' / 'Saved, but no recording time left'"]
+  row -- "already followed" --> dup["'Already in your hosts', skipped on Add"]
+  row -- "not found / unsupported" --> err["Friendly reason, skipped on Add"]
+  preview --> mode["One mode for all rows: Auto-record (default), Notify only, or Off"]
+  mode --> listeners{"Listener free for this row?<br/>Given out in pasted order; Off rows don't need one"}
+  listeners -- yes --> will["Row says what Add will do:<br/>'Will record when live' / 'Will notify when live' / 'Will be saved as Off'"]
+  listeners -- no --> full["Row says 'Will be saved as Off: all 5 listeners in use'"]
   will --> addbtn["Add saves every valid row"]
-  addbtn --> done["Toast 'Added 3 hosts'; hosts appear with their status"]
-  done --> live{"Host live right now?"}
-  live -- "yes, auto-record on" --> recnow["Recording starts at once (flow 2)"]
-  live -- "yes, auto-record off" --> offer["Card shows 'Live' with Record now"]
-  live -- no --> waits["Card waits: 'Offline · checked just now'"]
+  full --> addbtn
+  addbtn --> done["Toast 'Added 3 hosts'; they appear with their status"]
+  done --> live{"Live right now?"}
+  live -- "yes, Auto-record" --> recnow["Recording starts at once (flow 2)"]
+  live -- "yes, Notify only" --> offer["Card shows 'Live' with Record now"]
+  live -- "no, or Off" --> waits["Card shows its status and mode"]
 ```
 
 ### 2. A host goes live and gets recorded
 
 ```mermaid
 flowchart TD
-  check["Monitor checks the host"] --> live{"Live?"}
+  check["Monitor checks every host that isn't Off"] --> live{"Live?"}
   live -- no --> idle["'Offline · checked 2m ago'"]
   live -- "check overdue" --> unknown["'Last seen 8d ago' (never a stale 'Live')"]
   live -- yes --> wentlive["Card: 'Live'; Overview: Live now strip<br/>Notification '@host went live' (per settings)"]
-  wentlive --> auto{"Auto-record on and hours left?"}
-  auto -- yes --> rec["Recording starts by itself: 'Recording · 0:00'"]
-  auto -- "no, auto-record off" --> manual["Record now on the card and in the notification"]
+  wentlive --> mode{"Mode and hours"}
+  mode -- "Auto-record, hours left" --> rec["Recording starts by itself: 'Recording · 0:00'"]
+  mode -- "Notify only, hours left" --> manual["Record now on the card and in the notification"]
   manual -- "user clicks" --> rec
-  auto -- "no hours left" --> blocked["Record now disabled: 'No recording time left. Recording resumes on Nov 1.'"]
+  mode -- "no hours left" --> blocked["Record now disabled: 'No recording time left. Recording resumes on Nov 1.'"]
   rec --> during{"During the stream"}
   during -- "user clicks Stop recording" --> stopped["Toast 'Recording stopped, 42 min kept'<br/>Auto-record waits for the next broadcast"]
   during -- "stream drops, comes back" --> gap["Same recording continues, gap saved with its reason"]
@@ -149,7 +160,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  entry(["Notification, Overview latest recordings,<br/>/recordings, or a host's 'N recordings' link"]) --> list["/recordings (host filter shows as a removable chip)"]
+  entry(["Notification, Overview latest recordings,<br/>/recordings, or a host's 'N recordings' link"]) --> list["/recordings, filtered to the host when opened from one"]
   list --> card{"Card state"}
   card -- "recording now" --> inprog["'Recording now · ready when the stream ends'"]
   card -- "expired (hidden unless 'Show expired')" --> expired["Dimmed: 'Expired Oct 3 after 30 days' (flow 6)"]
@@ -175,16 +186,16 @@ Gaps show on the timeline as hatched spans; hovering one says why ("stream dropp
 ```mermaid
 flowchart TD
   card(["Host card or table row"]) --> act{"Action"}
-  act -- "Auto-record off" --> off["Toast 'Won't record @host automatically'<br/>Badge 'Auto-record off'; a recording in progress continues"]
-  act -- "Auto-record on" --> hours{"Hours left?"}
-  hours -- yes --> on["Toast; badge 'Auto-record on'<br/>If live now and not recording, recording starts"]
-  hours -- no --> paused["Badge 'Auto-record paused: no recording time left'<br/>Resumes on its own on Nov 1"]
+  act -- "Mode: Off to Auto-record or Notify only" --> free{"Listener free?"}
+  free -- yes --> on["Toast; we check it right away<br/>Auto-record and live now: recording starts"]
+  free -- no --> full["Option disabled: 'All 5 listeners in use. Turn another host Off to free one.'"]
+  act -- "Mode: between Auto-record and Notify only" --> swap["Toast; keeps its listener<br/>To Auto-record while live: recording starts<br/>To Notify only: a recording in progress continues"]
+  act -- "Mode: to Off" --> recording{"Recording right now?"}
+  recording -- yes --> confirmoff["Confirm: 'This stops the current recording. What's recorded so far is kept.'"] --> off
+  recording -- no --> off["Toast; card says 'Off · Not checked'; listener freed"]
   act -- "Record now / Stop recording" --> flow2["Flow 2"]
-  act -- Remove --> recording{"Recording right now?"}
-  recording -- no --> rm["Confirm: 'Remove @host? Its N recordings stay until they expire.'"]
-  recording -- yes --> rmrec["Confirm also says: 'This stops the current recording. What's recorded so far is kept.'"]
-  rmrec --> rm
-  rm --> removed["Toast; host leaves the list<br/>Its recordings stay in /recordings, the host chip keeps its name"]
+  act -- Remove --> rm["Confirm: 'Remove @host? Its N recordings stay until they expire.'<br/>Adds 'This stops the current recording' if it's recording"]
+  rm --> removed["Toast; host leaves the list and its listener is freed<br/>Its recordings stay in /recordings under the host's name"]
 ```
 
 ### 5. Remove and restore a recording
@@ -195,13 +206,11 @@ flowchart TD
   state -- yes --> disabled["Remove disabled: 'Stop recording first'"]
   state -- no --> moved["Moved to the recycle bin<br/>Toast 'Moved to recycle bin' with Undo"]
   moved -- Undo --> back["Back in /recordings"]
-  moved --> binlist["/recordings/recycle-bin: each row says 'Deleted for good on Nov 24'<br/>(30 days, or retention end if sooner)"]
+  moved --> binlist["/recordings/recycle-bin: each row says 'Deleted for good on Nov 24'"]
   binlist -- Restore --> restored["Toast; back in /recordings with its original retention"]
   binlist -- "date reached" --> gone["Deleted for good<br/>Old links open 'Deleted on Nov 24: removed by you'"]
   moved -. "link opened while in the bin" .-> inbin["Page 'In the recycle bin since Oct 25' with Restore"]
 ```
-
-Only you lose the recording. Other followers of the host keep theirs.
 
 ### 6. A recording expires
 
@@ -218,13 +227,12 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  use["Hours used this month"] --> w80["80%: notification<br/>Overview usage: 'At this pace your time runs out on Oct 28'"]
+  use["Hours used this month"] --> w80["80%: notification<br/>Usage forecast: 'At this pace your time runs out on Oct 28'"]
   w80 --> w100["100%: notification 'No recording time left'"]
   w100 --> stop["Recordings in progress stop at the limit, kept up to there"]
-  stop --> pause["Auto-record pauses on every host; Record now disabled<br/>Both say 'Recording resumes on Nov 1' → /account plan section"]
-  pause --> checks["Live status keeps updating"]
-  pause --> plan["/account plan section: hours used, reset date, retention<br/>(Upgrade button once billing exists)"]
-  plan --> resetday["Reset day: auto-record resumes on hosts that had it on"]
+  stop --> pause["Auto-record pauses and Record now is disabled<br/>Both say 'Recording resumes on Nov 1' with a link to the plan"]
+  pause --> keep["Hosts keep their mode and listener; live status keeps updating"]
+  keep --> resetday["Reset day: Auto-record hosts record again"]
 ```
 
 ### 8. Sign up and verify
@@ -281,13 +289,13 @@ Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, pl
 
 | Flow | No dead ends (P4) | Nothing disappears silently (P8) | Other |
 | --- | --- | --- | --- |
-| 1. Follow a host | Bad rows say why; hosts saved without time left say so and link to the plan | Rows say exactly what Add will do (R22) | P3 paste anything |
-| 2. Goes live, recorded | Auto-record off still offers Record now; disabled Record now says why and when | Manual stops, gaps, cut-offs, and failures say what we kept | P1 status shows how old it is |
+| 1. Follow a host | Bad rows say why; rows past the listener limit say they'll be saved as Off | Rows say exactly what Add will do (R22) | P3 paste anything |
+| 2. Goes live, recorded | Notify only offers Record now; disabled Record now says why and when | Manual stops, gaps, cut-offs, and failures say what we kept | P1 status shows how old it is |
 | 3. Watch, cut, download | Expired and in-progress cards say why they can't play; playback errors offer Retry and Download | Sections that span a gap say so before download | P6 timeline works by touch |
-| 4. Manage a host | Disabled actions say why | Removing a host says its recordings stay; removing while recording says what's kept | P5 every badge is text, not just an icon |
+| 4. Manage a host | A full listener limit says how to free one; disabled actions say why | Turning Off or removing while recording says what's kept; removing says recordings stay | P5 modes and badges are words, not just icons |
 | 5. Remove a recording | Undo, Restore, and a page for links to removed recordings | Every bin row shows the day it's deleted for good | P7 removal affects only you |
 | 6. Expires | Expired links open a page with a way back | Retention line, warning 3 days before, page says when and why (R16) | P7 only followers see it |
-| 7. Time runs out | Paused hosts link to the plan and the reset date | Warnings at 80% and 100% before anything stops; forecast on Overview | P1 live status keeps updating |
+| 7. Time runs out | Paused hosts say when recording resumes and link to the plan | Warnings at 80% and 100% before anything stops, plus a forecast | P1 live status keeps updating |
 | 8. Sign up and verify | Resend, and 'Use a different email' for a typo | — | — |
 | 9. Sign in | Wrong password links to Forgot password; unverified goes to the verify page; redirect returns you | — | — |
 | 10. Reset password | Expired link offers a new one | Other sessions are signed out, and the page says so | — |
