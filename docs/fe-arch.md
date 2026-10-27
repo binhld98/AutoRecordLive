@@ -13,7 +13,7 @@ Marketing and advertising landing pages live in `fe/ads/`. They are separate fro
 | UI | React + TypeScript | Components, page composition, and typed front-end code |
 | Build | Vite | Local development server and production SPA assets |
 | Routing | React Router | URL-based navigation, nested layouts, and protected app routes |
-| Server state | TanStack Query | Fetching, caching, polling, paged lists, and refreshing data after changes |
+| Server state | TanStack Query | Fetching, caching, paged lists, refetching on focus, and refreshing data after changes |
 | Forms | React Hook Form + Zod | Form state and schema-based client-side validation |
 | Styling | Tailwind CSS | Utility-first styling and design tokens |
 | UI primitives | shadcn/ui (`base-nova` style, built on Base UI) | Accessible, editable components owned in the front-end codebase |
@@ -29,7 +29,7 @@ Marketing and advertising landing pages live in `fe/ads/`. They are separate fro
 | --- | --- |
 | Call the API at `/api` on the app's own origin (Vite proxy in development, reverse proxy in production) | The refresh cookie stays first-party, and we don't need CORS |
 | Keep the access token in memory and the refresh token in an `httpOnly` cookie; refresh on app start | Scripts can't steal the refresh token, and a page reload keeps the user signed in |
-| Fetch all API data through TanStack Query; poll lists every 30 s until real-time exists | Caching, polling, paging, and reloading after changes come built in |
+| Fetch all API data through TanStack Query; refetch on window focus and after the user's own changes, never poll. Server-Sent Events push live changes once the back end exists | Caching, refetching on focus, paging, and reloading after changes come built in |
 | Use SSE for real-time, authenticated with a short-lived, single-use ticket, and serve the app over HTTP/2 | Updates only flow server to browser, and `EventSource` can't send an `Authorization` header. Over HTTP/1.1 a browser allows six connections per origin, and every open tab holds one |
 | The API sends `camelCase` JSON with ISO 8601 UTC timestamps; paged lists return `{ items, nextCursor, total }` | Front-end types match responses without conversion, and the UI shows every date in the user's own time zone |
 | The server computes derived state (e.g. `liveStatus`, `runsOutAt`) and parses host links | Only the server knows when it last checked a host and how fast quota is being used, and only it can follow short links like `v.douyin.com/…` |
@@ -46,7 +46,7 @@ Use a public authentication layout and a separate authenticated application shel
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | Public | Sign in with a password or Google, create an account, and recover access |
 | `/verify-email` | Signed in, unverified | Verify the email before using the app |
 | `/` | Authenticated | Overview of followed hosts, current live/recording activity, recent recordings, items that need attention, and plan usage with its forecast |
-| `/hosts` | Authenticated | Add (one or many at once), view, and remove followed hosts or channels; set each host's mode (Auto-record, Notify only, Off); record or stop by hand |
+| `/hosts` | Authenticated | Add (one or many at once), view, and remove followed hosts or channels; start or stop listening to each host (a listening host records every broadcast) |
 | `/recordings` | Authenticated | Search, filter, and review recordings, see their status and retention, and remove them |
 | `/recordings/recycle-bin` | Authenticated | Restore removed recordings before they're deleted for good |
 | `/recordings/:id` | Authenticated | Play a recording, jump between its chapters, see where it has gaps, view its metadata, and download it whole or in sections |

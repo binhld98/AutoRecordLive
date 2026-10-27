@@ -2,9 +2,10 @@
 
 This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
-- What the reference app does, and its known issues (R1–R25): [reference app study](./ref-app-study.md)
+- What the reference app does, and its known issues (R1–R28): [reference app study](./ref-app-study.md)
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
 - How people move through the app: [user flows and sitemap](./user-flows.md)
+- How hosts are followed, listened to, and recorded: [hosts user flows](./user-flows-hosts.md)
 
 ## Product principles
 
@@ -21,17 +22,17 @@ These come from the reference app's weak spots. Check every screen against them.
 
 ## What we do better
 
-How we fix each known issue from the [reference app study](./ref-app-study.md#known-issues), and the step where it happens.
+How we fix each known issue from the reference app study, and the step where it happens.
 
 | Issue | Our fix | Step |
 | --- | --- | --- |
 | R1 Dashboard is only a streamer list | A real overview: live now, recording now, recent recordings, failures, usage | 5 |
-| R2 Stale live status | The server returns `liveStatus` (`live`, `offline`, `unknown`) based on its own check interval, plus `lastCheckedAt`. The UI shows "Last seen 8d ago" when the status is unknown | 2, 3, BE |
+| R2 Stale live status | The server returns `liveStatus` (`live`, `offline`, `unknown`) based on its own check interval, plus `lastCheckedAt`. The UI shows "Status unknown · checked 8d ago" when the status is unknown | 2, 3, BE |
 | R3 Truncated cards | Responsive grid that fills the width, plus a table view for many hosts | 3 |
 | R4 Cryptic icons | Text labels, or tooltips with `aria-label`s | 3 |
 | R5 Confusing usage numbers | Plain sentences on the Overview and `/account`: "Used 12h of 50h · resets Nov 1" and "3 of 5 listeners in use", with "no time left" and "trial ended" states | 5, 7 |
 | R6 Duplicate expiry warnings, dead cards | One retention line. Expired cards are dimmed, say why they can't play, and are hidden by default behind a filter | 4 |
-| R7 Refresh buttons, uneven updates | No Refresh buttons. Every list polls every 30 s at first (step 2); Server-Sent Events once the back end exists | 2, BE |
+| R7 Refresh buttons, uneven updates | No Refresh buttons and no polling. Lists refetch when the tab regains focus and update at once after the user's own actions (step 2); Server-Sent Events push changes while you watch once the back end exists. Statuses show how old they are, and a failed update shows "Couldn't update · Retry" | 2, BE |
 | R8 Platform picker; one host at a time | Paste anything with auto-detect and a preview before saving; batch import | 3 |
 | R9 Duplicate nav, no search | Header holds a ⌘K search for hosts and recordings instead of repeated links | 1, 6 |
 | R10 Detail page layout | Two columns on desktop: player on the left, clickable chapters on the right that jump the video | 4 |
@@ -46,14 +47,17 @@ How we fix each known issue from the [reference app study](./ref-app-study.md#kn
 | R19 No password reset or account controls | Forgot and reset password pages. `/account` adds sign-in methods, change password, and delete account | 7, BE |
 | R20 Trial overshoots its quota | The recorder checks the quota before each segment and stops at the limit, so usage never goes past it | BE |
 | R21 Room title used as the streamer's name | Notifications and previews name the host (display name and `@username`) and show the room title separately | 3, 6 |
-| R22 Misleading "listening enabled" | Each preview row says what Add will do: "Will record when live", "Will notify when live", "Will be saved as Off: all 5 listeners in use", or "Already in your hosts" | 3 |
+| R22 Misleading "listening enabled" | Each preview row says what Add will do: "Will listen and record when live", "Will be saved, not listening: all 5 listeners in use", or "Already in your hosts" | 3 |
 | R23 Recordings filter by platform only | Search, platform and host filters (step 4). The host filter shows as a removable chip, and host cards link to it. Sort by newest or longest | 4 |
 | R24 Abandoned checkout stuck on "Pending" | Unpaid checkouts expire and show as "Canceled" | Later |
 | R25 Session replay without consent | No session replay. If we add analytics, use a cookie-free tool that needs no consent prompt | Later |
+| R26 Invisible listener limit | Rows past the limit say "Will be saved, not listening: all 5 listeners in use" before Add. Resume listening when all are in use is disabled with "Stop listening to another host to free one". `/hosts`, the Overview, and `/account` say "3 of 5 listeners in use". The API answers `409` with a code, never `500` | 3, 5, BE |
+| R27 Add Streamer's check misfires | One check per pasted line, of any length, batched into one request. A line that couldn't be checked says so with Retry; an unknown username says "Not found" | 3, BE |
+| R28 Recording starts late | Adding a host or resuming listening reuses the latest live check, so a host that is live starts recording at once | BE |
 
 ## Where we go further
 
-Fixing R1–R25 gets us level with the reference. These upgrades put us ahead. Each one answers something the [study](./ref-app-study.md) found: a weak spot, or an asset the reference has but barely uses.
+Fixing R1–R28 gets us level with the reference. These upgrades put us ahead. Each one answers something the study found: a weak spot, or an asset the reference has but barely uses.
 
 | Upgrade | What it is | Answers | Step |
 | --- | --- | --- | --- |
@@ -61,7 +65,6 @@ Fixing R1–R25 gets us level with the reference. These upgrades put us ahead. E
 | Instant download | Record HLS as fragmented MP4 (CMAF) segments. A download is the init segment plus the media segments, streamed by the API as one `.mp4`. It starts at once: no export job, no "your file is ready" email, no 36-hour cache | Exports that queue, then expire | 4, BE |
 | Usage forecast | The overview says "At this pace your recording time runs out on Oct 28" and shows usage per host. Warnings arrive at 80% and 100% before recording stops | Listening stops without warning when the quota runs out | 5, BE |
 | Live alerts | A "host went live" notification with a link to the live stream, with per-host settings for in-app, email, Telegram, Discord webhook, and browser push | Only account-wide email settings | 6, P3 |
-| Host modes | Each host is Auto-record, Notify only, or Off, and you can Record now or Stop recording by hand. Active listeners cap how many hosts are checked, which also caps how many record at once | Listening is all or nothing: Stop or Resume | 3, BE |
 | Watch while recording | Play a recording while it's still in progress; the uploader keeps the HLS playlist growing as segments arrive | You wait for the stream to end | P3 |
 | Section downloads | On the recording page, select one or more sections on the timeline and download each as its own `.mp4`. With short (about 6 s) segments, a section is a slice of the segment list | Whole-file exports cut short by the quota; 60 s segments | 4, BE |
 | Recycle bin | Removing a recording moves it to a recycle bin, where it can be restored for 30 days. Each one shows the day it's deleted for good | — | 4, BE |
@@ -69,12 +72,12 @@ Fixing R1–R25 gets us level with the reference. These upgrades put us ahead. E
 | Find the moment | ⌘K searches the transcripts of all your recordings. Each result shows the spoken line and opens the player at that second | Transcripts that are generated but only used as (blocked) captions | P3 |
 | Keep your recordings | Copy each finished recording to the user's own storage (Google Drive, Dropbox, or an S3 bucket), so it outlives the plan's retention | Recordings deleted after 3–90 days, sometimes silently (R16) | P3 |
 | Smarter live checks | Check each host more often around the times it usually goes live, so recordings start sooner. A heatmap shows those times and guesses the next stream | Stale status (R2), missed openings | P3 |
-| Recording rules | Per host: only record during certain hours, a maximum length, a quality setting, or only when the stream title matches a keyword | "Record Rules" strings, never built (R11) | P3 |
-| Resume after upgrade | When a limit blocks an action, the upgrade page remembers it and finishes it after payment, e.g. switches the paused host back on. This is the reference's best pattern, so we copy it | — | Later |
+| Recording rules | A settings screen per host that goes beyond listening on or off: listen without recording (alerts only), record by hand, record on a schedule or during certain hours, a maximum length, a quality setting, or only when the stream title matches a keyword | "Record Rules" strings, never built (R11); listening is all or nothing, as in the reference and in our first version | P3 |
+| Resume after upgrade | When a limit blocks an action, the upgrade page remembers it and finishes it after payment, e.g. resumes listening to the host that was blocked. This is the reference's best pattern, so we copy it | — | Later |
 
 ## Routes
 
-Our routes from [`fe-arch.md`](./fe-arch.md), next to the reference app's:
+Our routes from `fe-arch.md`, next to the reference app's:
 
 | Ours | Reference |
 | --- | --- |
@@ -86,7 +89,7 @@ Our routes from [`fe-arch.md`](./fe-arch.md), next to the reference app's:
 
 ## Phase 1 — Front end on fake data
 
-The back end doesn't exist yet, so build the front end against a **fake API**: one module whose functions return Promises from in-memory data, with the same names and shapes as the real endpoints will have. When the back end is ready, swap the function bodies for API client calls and leave the pages untouched. See [`fe-arch.md`](./fe-arch.md#key-decisions).
+The back end doesn't exist yet, so build the front end against a **fake API**: one module whose functions return Promises from in-memory data, with the same names and shapes as the real endpoints will have. When the back end is ready, swap the function bodies for API client calls and leave the pages untouched. See `fe-arch.md`.
 
 Do each step in its own `feat/<slug>` branch and PR, following [AGENTS.md](../AGENTS.md). Run `npm run build`, `npm run lint`, and (from step 3) `npm test` before every PR.
 
@@ -100,7 +103,7 @@ npx shadcn@latest add sidebar button card badge separator dropdown-menu avatar p
 ```
 
 - `src/main.tsx`: set up React Router with two layouts: `AuthLayout` (centered card) for `/login`, `/register`, `/verify-email`, `/forgot-password`, and `/reset-password`, and `AppLayout` (sidebar + header + `<Outlet />`) for everything else.
-- `src/components/app-sidebar.tsx`: logo and links to Overview, Hosts, Recordings, Notifications, Account (`lucide-react` icons). No usage card; see [user flows](./user-flows.md#decisions). The shadcn `sidebar` component handles collapsing on mobile.
+- `src/components/app-sidebar.tsx`: logo and links to Overview, Hosts, Recordings, Notifications, Account (`lucide-react` icons). No usage card (see user flows). The shadcn `sidebar` component handles collapsing on mobile.
 - `src/components/app-header.tsx`: a search button that opens a ⌘K `command` dialog (empty for now), and an account dropdown with Appearance (light/dark/auto) and Logout.
 - One placeholder per page in `src/pages/` (`overview.tsx`, `hosts.tsx`, ...) showing only the title and subtitle.
 - Theme in `src/index.css`: `--primary` blue, background gray-50, plus the dark variant. Save the Appearance choice in `localStorage` and apply the `dark` class from a small inline script in `index.html`, so the page doesn't flash the wrong theme on load.
@@ -115,23 +118,23 @@ Goal: one place that defines the data, returns it, and keeps it fresh.
 npm install @tanstack/react-query
 ```
 
-- `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference [data shapes](./ref-app-study.md#data-shapes) but in `camelCase`. Add what the reference lacks:
+- `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference app's data shapes but in `camelCase`. Add what the reference lacks:
   - `Host.liveStatus` (`live`, `offline`, `unknown`) and `Host.lastCheckedAt` (for R2).
-  - `Host.mode` (`auto`, `notify`, `off`) and `Host.recording` (the recording in progress for you, or `null`).
+  - `Host.listening` (boolean) and `Host.recording` (the recording in progress for you, or `null`).
   - `Recording.chapters` (`{ startSec, title }[]`, for step 4).
   - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health).
-  - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself ([`fe-arch.md`](./fe-arch.md#key-decisions)).
+  - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself (`fe-arch.md`).
   - `Recording.removedAt` and `deletesAt` (for the recycle bin).
   - `Quota`: recording hours used and allowed with `resetsAt`, listeners used and allowed, and `runsOutAt`: when recording time runs out at the current pace, or `null` (for the usage forecast). No download quota.
 - `src/lib/api.ts`, the fake API:
-  - Hosts: `listHosts()` (the whole list), `inspectUrls(urls)`, `addHosts(urls, mode)`, `setHostMode(id, mode)`, `startRecording(id)`, `stopRecording(id)`, `removeHost(id)`.
+  - Hosts: `listHosts()` (the whole list), `inspectUrls(urls)`, `addHosts(urls)`, `startListening(id)`, `stopListening(id)`, `removeHost(id)`.
   - Recordings: `listRecordings(filters, cursor?)`, `getRecording(id)`, `getSectionDownloadUrl(id, startSec, endSec)`, `removeRecording(id)`, `restoreRecording(id)`, `listRemovedRecordings(cursor?)`.
   - Notifications: `listNotifications(cursor?)`, `markRead(id)`, `markAllRead()`, `getNotificationSettings()`, `updateNotificationSettings(settings)`.
   - Other: `getQuota()`, `getOverview(since)`.
   - Paged lists return `{ items, nextCursor, total }`.
-  - Add a short delay to every call. Make the data change over time (a host goes live, a new recording appears) and make a few calls fail at random, so loading, polling, and error states get exercised.
+  - Add a short delay to every call. Make the data change over time (a host goes live, a new recording appears) and make a few calls fail at random, so loading, refetch-on-focus, and error states get exercised.
 - `src/lib/format.ts`: `formatDuration`, `formatBytes`, and `formatRelative` ("8d ago") using the built-in `Intl` APIs.
-- Wrap the app in a `QueryClientProvider`. Pages read data with `useQuery` / `useInfiniteQuery` and `refetchInterval: 30_000` instead of a Refresh button.
+- Wrap the app in a `QueryClientProvider`. Pages read data with `useQuery` / `useInfiniteQuery`, refetching on window focus and after the user's own changes, instead of a Refresh button.
 
 ### Step 3 — Hosts (`feat/hosts`)
 
@@ -144,17 +147,17 @@ npm install -D vitest
 
 Add `"test": "vitest"` to the `package.json` scripts.
 
-- Header: title, subtitle, and **Add hosts**. No Refresh button.
+- Header: title, subtitle, "3 of 5 listeners in use", and **Add hosts**. No Refresh button.
 - Filter bar: search, platform, status, a grid/table toggle, and a result count. The hosts list comes back whole, so filter it in the browser.
-- **Grid view:** responsive cards (`grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]`) with the full name, avatar, platform, status badge, room title, its mode ("Auto-record", "Notify only", or "Off"), a live dot when `liveStatus` is `live` (or "Last seen 8d ago" when it's `unknown`), and the number of recordings as a link to the recordings filtered to that host.
+- **Grid view:** responsive cards (`grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]`) with the full name, avatar, platform, status badge, room title, "Listening" or "Not listening", a live dot when `liveStatus` is `live` (or "Status unknown · checked 8d ago" when it's `unknown`), and the number of recordings as a link to the recordings filtered to that host.
 - **Table view:** the same data in rows, for people with many hosts.
-- Actions: a mode picker (Auto-record, Notify only, Off), and Record now / Stop recording, each with a toast; Remove with an `AlertDialog` confirmation. Switching a host on while every listener is in use is disabled with the reason. After each action, invalidate the hosts query. Icon buttons get tooltips.
+- Actions: Stop listening or Resume listening, each with a toast, and Remove. Stop listening while recording and Remove ask first with an `AlertDialog`; the one for a recording host says "This stops the current recording. What's recorded so far is kept." Resume listening while every listener is in use is disabled with the reason. After each action, invalidate the hosts query. Icon buttons get tooltips.
 - **Add hosts dialog:**
   - One textarea. Paste a link, `@username`, or several lines.
   - While typing, `src/lib/parse-host-url.ts` gives instant hints per line (detected platform, or "not a link"). It's only a hint: the server's inspect is the real parser, because it can follow short links like `v.douyin.com/…`. Test the parser with Vitest.
   - On a short pause in typing, send all lines in one `inspectUrls` call and show a preview row per line (avatar, name, live or not) or a friendly error.
   - When a bare username could belong to more than one platform, the row shows a platform picker. Today `@name` means TikTok.
-  - One mode for all rows, Auto-record by default. Each row says what Add will do, including "Will be saved as Off" once listeners run out.
+  - New hosts start listening while listeners are free. Each row says what Add will do, including "Will be saved, not listening" once listeners run out.
   - **Add** saves every valid row in one `addHosts` call.
 - Empty state: "No hosts yet. Paste a TikTok or Douyin link to start."
 
@@ -195,7 +198,7 @@ The reference doesn't have this page. It reads one `getOverview(since)` call, be
 ### Step 7 — Auth (`feat/auth`)
 
 - Login, register, verify email, forgot password, and reset password pages with React Hook Form + Zod, inputs with leading icons, and a show-password toggle. Login and register offer "Continue with Google". Login links to "Forgot password?".
-- `src/lib/api-client.ts`: the shared client from [`fe-arch.md`](./fe-arch.md#key-decisions). It keeps the access token in memory, attaches it to requests, and on a `401` refreshes once and retries. Only one refresh runs at a time.
+- `src/lib/api-client.ts`: the shared client from `fe-arch.md`. It keeps the access token in memory, attaches it to requests, and on a `401` refreshes once and retries. Only one refresh runs at a time.
 - On app start, call `refresh()`. A `RequireAuth` wrapper on `AppLayout` shows a loading state until it finishes, then renders the page, redirects to `/login?redirect=...`, or shows `/verify-email` while the email isn't verified.
 - `/account`: profile, sign-in methods, change password, plan and usage, and delete account.
 - Until the back end exists, the fake `login()` and `refresh()` always succeed, so a page reload keeps you signed in.
@@ -207,22 +210,22 @@ Start once the hosts and recordings pages work on fake data, so you know exactly
 | Part | Job |
 | --- | --- |
 | API server | Served under `/api` on the app's origin. Auth (JWT access token + refresh cookie), hosts, recordings, notifications, SSE events. `camelCase` JSON, cursor pagination for paged lists |
-| Database | PostgreSQL. Separate `channels` (a streamer on a platform) from `subscriptions` (a user follows a channel, with its mode), so a streamer followed by many users is checked and recorded once. Plus users, recordings, recording parts, chapters, notifications |
-| Monitor worker | Checks each channel that has at least one subscription that isn't Off, at a rate the platform tolerates. Stores `lastCheckedAt` and computes `liveStatus`, which is `unknown` once a check is overdue |
-| Recorder worker | When a channel goes live, records with `ffmpeg` (or `streamlink` / `yt-dlp`) as HLS with fragmented MP4 segments of about 6 s, **to local disk**. An uploader sends each finished segment and the updated playlist to S3-compatible object storage (e.g. Backblaze B2 or Cloudflare R2). If the stream drops or the worker crashes, the next attempt continues the same recording after an `#EXT-X-DISCONTINUITY` tag and saves the gap with its reason. A new part starts only when the stream's format changes, because the download needs one init segment. When the stream ends, it writes the thumbnail, duration, and size. It records while at least one follower wants the broadcast, and each follower's recording covers their span (from auto-start or Record now to Stop). It checks each follower's hours before each segment and stops their span at the limit |
+| Database | PostgreSQL. Separate `channels` (a streamer on a platform) from `subscriptions` (a user follows a channel, listening or not), so a streamer followed by many users is checked and recorded once. Plus users, recordings, recording parts, chapters, notifications |
+| Monitor worker | Checks each channel that has at least one listening subscription, at a rate the platform tolerates. Stores `lastCheckedAt` and computes `liveStatus`, which is `unknown` once a check is overdue |
+| Recorder worker | When a channel goes live, records with `ffmpeg` (or `streamlink` / `yt-dlp`) as HLS with fragmented MP4 segments of about 6 s, **to local disk**. An uploader sends each finished segment and the updated playlist to S3-compatible object storage (e.g. Backblaze B2 or Cloudflare R2). If the stream drops or the worker crashes, the next attempt continues the same recording after an `#EXT-X-DISCONTINUITY` tag and saves the gap with its reason. A new part starts only when the stream's format changes, because the download needs one init segment. When the stream ends, it writes the thumbnail, duration, and size. It records while at least one follower wants the broadcast, and each follower's recording covers their span (from when it starts recording for them until the stream ends or they stop listening). It checks each follower's hours before each segment and stops their span at the limit |
 | Playback | `GET /api/recordings/:id/playlist.m3u8` returns the playlist with every segment rewritten to a signed URL that stays valid for the recording's length plus a margin, because hls.js won't fetch a finished playlist again. The bucket's CORS allows our origin |
 | Downloads | `GET /api/recordings/:id/download.mp4` streams the init segment and then every media segment from storage as one file, rate-limited per user; there's no download quota. A section streams only its segments |
 
 Build order:
 
 1. Same-origin setup: Vite `server.proxy` for `/api` in development, a reverse proxy with HTTP/2 in production.
-2. Auth with email verification and Google sign-in: refresh cookie `HttpOnly; Secure; SameSite=Lax; Path=/api/auth`, no refresh token rotation at first. Then hosts CRUD with modes and the listener limit, and `POST /api/hosts/inspect`, which follows short links and returns a preview per URL.
+2. Auth with email verification and Google sign-in: refresh cookie `HttpOnly; Secure; SameSite=Lax; Path=/api/auth`, no refresh token rotation at first. Then hosts CRUD with listening and the listener limit, and `POST /api/hosts/inspect`, which follows short links and returns a preview per URL.
 3. Monitor for one platform.
 4. Recorder and uploader for one platform.
 5. Recordings API and signed playlists.
 6. Downloads, usage warnings, notifications (in-app and email), and deletion: files go when retention ends, or 30 days after a recording is removed.
 7. AI content: transcribe each recording and generate its summary and chapters. The reference already has summaries, outlines, highlights, FAQs, and transcripts; step 4 builds the chapter UI with fake data.
-8. Real-time: `POST /api/realtime/ticket` and `GET /api/events` (SSE with heartbeats; the proxy must not buffer it). Tickets are single-use, so the client reconnects with a fresh ticket instead of relying on `EventSource`'s auto-reconnect. Once the front end reacts to events, remove its 30 s polling.
+8. Real-time: `POST /api/realtime/ticket` and `GET /api/events` (SSE with heartbeats; the proxy must not buffer it). Tickets are single-use, so the client reconnects with a fresh ticket instead of relying on `EventSource`'s auto-reconnect. Front end: open the stream after sign-in and turn each event into a TanStack Query cache update or invalidation (host status, recording, unread count). While the stream is down, show a quiet "Reconnecting…", and refetch everything after reconnecting, since events may have been missed.
 
 ## Phase 3 — Beyond the reference
 
