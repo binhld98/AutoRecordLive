@@ -144,11 +144,11 @@ flowchart TD
   keep --> resetday["Reset day: listening hosts record again"]
 ```
 
-Flows 8 (Sign up or sign in) and 10 (Reset password) are in the account user flows.
+Flows 8 (Sign up and verify), 9 (Sign in), and 10 (Reset password) are in the account user flows.
 
 ## Principles check
 
-Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, and 8 and 10 in the account user flows.
+Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, and 8, 9, and 10 in the account user flows.
 
 | Flow | No dead ends (P4) | Nothing disappears silently (P8) | Other |
 | --- | --- | --- | --- |

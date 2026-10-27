@@ -197,7 +197,7 @@ The reference doesn't have this page. It reads one `getOverview(since)` call, be
 
 ### Step 7 — Auth (`feat/auth`)
 
-- Login, register, verify email, forgot password, and reset password pages with React Hook Form + Zod, inputs with leading icons, and a show-password toggle. Login and register offer "Continue with Google". Login links to "Forgot password?".
+- Login, register, verify email, forgot password, and reset password pages with React Hook Form + Zod, inputs with leading icons, and a show-password toggle. Login offers "Continue with Google"; register is email and password only. Login links to "Forgot password?".
 - `src/lib/api-client.ts`: the shared client from `fe-arch.md`. It keeps the access token in memory, attaches it to requests, and on a `401` refreshes once and retries. Only one refresh runs at a time.
 - On app start, call `refresh()`. A `RequireAuth` wrapper on `AppLayout` shows a loading state until it finishes, then renders the page, redirects to `/login?redirect=...`, or shows `/verify-email` while the email isn't verified.
 - `/account`: profile, sign-in methods, change password, plan and usage, and delete account.
