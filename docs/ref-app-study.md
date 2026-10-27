@@ -1,13 +1,17 @@
 # Reference app study
 
-AutoRecordLive is modeled on https://app.autorecordlive.com. This document records what that app does and how, so we can match the parts that work and fix the parts that don't. Our plan is in the [roadmap](./roadmap.md).
+AutoRecordLive is modeled on https://app.autorecordlive.com. This document is the overview of what that app does and how, so we can match the parts that work and fix the parts that don't. Our plan is in the [roadmap](./roadmap.md).
 
-Last studied on 2026-10-24 on a Free Trial account (trial ended 2026-10-22) with one followed streamer. Methods: using the app at desktop and phone widths, reading its JavaScript bundle, and calling its API with read-only requests.
+Deep studies of single screens:
+
+- [Streamers dashboard](./ref-app-dashboard.md): the streamer list, Add Streamer, live status, and the active listener limit (studied 2026-10-26).
+
+The overview was last studied on 2026-10-24 on a Free Trial account (trial ended 2026-10-22) with one followed streamer. Methods: using the app at desktop and phone widths, reading its JavaScript bundle, and calling its API with read-only requests.
 
 ## Core loop
 
-1. The user pastes a streamer URL (TikTok or Douyin) or `@username`. The browser normalizes it (TikTok → `https://www.tiktok.com/@user/live`, Douyin → `https://live.douyin.com/<id>`, including Douyin share text that contains a `v.douyin.com` short link). After a short pause in typing it calls `POST /channels/inspect`, which returns the avatar, name, and live status as a preview before anything is saved.
-2. Saving the streamer starts **listening**: the back end polls the platform to see whether the streamer is live. Listening stops on its own when the user's recording quota runs out.
+1. The user pastes a streamer URL (TikTok or Douyin) or `@username`. The browser rewrites it to a full live URL and calls `POST /channels/inspect`, which checks the platform and returns the avatar, name, and live status as a preview before anything is saved.
+2. Saving the streamer starts **listening** if one of the plan's active listeners is free; otherwise the streamer is saved as stopped. Only listening streamers are checked: the back end polls the platform to see whether they're live. Listening stops on its own when the user's recording quota runs out.
 3. When the streamer goes live, the back end **records** the stream as HLS (60-second MPEG-TS segments) in cloud storage. A recording belongs to the channel, not the user, so everyone who follows that streamer shares it. One recording can have several parts ("tasks", each with its own playlist). The detail page shows them as episodes ("Part 1 of 2").
 4. When the stream ends, post-processing builds a thumbnail, works out the duration and file size, and marks the recording ready. It transcribes the audio with Whisper on Cloudflare Workers AI (`@cf/openai/whisper-large-v3-turbo`). From the transcript it generates a summary, outline, highlights, FAQ, SEO fields (meta title, description, H1, keywords, tags), and a content-quality verdict.
 5. The user watches the recording in the browser (hls.js player) or asks for an **export**. Exports are prepared in the background as MP4 (or a ZIP of MP4s for multi-part recordings) and kept for about 36 hours. The user gets an in-app notification and an email when the export is ready.
@@ -34,7 +38,7 @@ Every signed-in page shares one shell:
 | Route | Screen | What's on it |
 | --- | --- | --- |
 | `/login`, `/register`, `/verify-email/*` | Auth | Centered form. Email + password (6+ characters), nickname on register, Google sign-in, Cloudflare Turnstile on register, email verification. Signed-out users are sent to `/login?redirect=<path>` |
-| `/` | Dashboard = **Streamers** | Platform and status filters, result count, grid of streamer cards (12 per page). **Add Streamer** opens a modal |
+| `/` | Dashboard = **Streamers** | Platform and status filters, result count, grid of streamer cards (12 per page). **Add Streamer** opens a modal. See the dashboard study |
 | `/add` | Add deep link | Opens Add Streamer; sends signed-out users to `/login?redirect=/add` |
 | `/recordings` | Recordings | Platform filter, result count, grid of recording cards. Takes a hidden `?channel_id=` filter |
 | `/recordings/:platform/:recordingId` | Recording detail | Header card, player, Refresh / Download / Replay, a side column, AI sections, related recordings |
@@ -45,9 +49,7 @@ Every signed-in page shares one shell:
 | `/admin/*` | Operator console | Recording repair, metadata repair, export recovery, retention, publication, AI content, impersonation, trial anti-abuse, system notice. Internal only |
 | `*` | Catch-all | Redirects to `/` (or to `/verify-email` when the URL has a `token`) |
 
-**Streamer card:** avatar, name, a green dot + platform, status badge (e.g. red `STOPPED`) in the top right, the current room title, and the last seen time. The footer has Resume/Stop Listening, a delete (unsubscribe) icon that asks for confirmation, a recording-history button, and an external link to the live page. The history button shows the recording count, with a lock when the recordings are preview-only, and opens `/recordings?channel_id=…`.
-
-**Add Streamer modal:** a TikTok / Douyin segmented toggle, one input ("Paste TikTok link or @username"), helper text, examples (`tiktok.com/@username/live`, `@username`), and Cancel / Add Streamer buttons. Add Streamer stays disabled until the input is valid. Pasting a link of the other platform flips the toggle by itself. A valid input is rewritten to the full URL, then the inspect preview appears: avatar, name, live status, and a platform tag. An invalid one shows "We couldn't recognize this TikTok channel".
+**Streamer card and Add Streamer modal:** see the dashboard study.
 
 **Recording card:** a thumbnail with a platform tag (top left) and duration (bottom right), the title, streamer · date, a retention line ("Available until …" / "Retention expired"), and the file size.
 
@@ -73,7 +75,7 @@ From `GET /payments/plans`. Prices are in cents in the API. Yearly plans cost ab
 | Standard | 24.99/month, 239.90/year | 150 h/month | 6 | 60 days | 400 GB/month |
 | Premium | 59.99/month, 575.90/year | 400 h/month | 10 | 90 days | 1 TB/month |
 
-- Every plan allows unlimited saved streamers; the listener limit caps how many are listening at once.
+- Every plan allows unlimited saved streamers; the listener limit caps how many are listening or recording at once. The dashboard study shows how it's counted.
 - Packs stack recording time and download traffic; listener limit and retention stay the same. The pack also carries `inactivity_pause_days: 30`, which the UI never explains.
 - On the free plan, playback stops after 300 seconds. The server enforces this by serving a preview playlist (`playlist.m3u8?preview=true`) that lists only the first five segments. Full playback and downloads work only for the user's **latest** recording; older ones answer `403 "full playback is available for latest recording only"`.
 - When an export is bigger than the remaining download quota, it only covers what the quota allows.
@@ -85,8 +87,8 @@ From `GET /payments/plans`. Prices are in cents in the API. Yearly plans cost ab
 
 | Thing | States |
 | --- | --- |
-| Listener (streamer subscription) | `LISTENING`, `PENDING`, `RECORDING`, `STOPPED`. The status filter offers all but `PENDING` |
-| Live status | live, offline (`is_living` boolean). `POST /channels/inspect` returns a label instead (`"Not live"`) |
+| Listener (streamer subscription) | `LISTENING`, `PENDING`, `RECORDING`, `STOPPED`. The status filter offers all but `PENDING`, which never appeared in use |
+| Live status | live, offline (`is_living` boolean, a stored value, not checked on each request). `POST /channels/inspect` checks the platform and returns a label instead (`"Live now"`, `"Not live"`) |
 | Recording | `PENDING`, `RECORDING`, `PROCESSING`, `READY`/completed, `FAILED` |
 | Retention | `EXPIRED`, `POLICY_UNKNOWN` (shown as "Retention pending confirmation"); the UI also has deleting and deleted; more in the operator console |
 | Export | not requested, preparing, ready, failed, expired, plus manual-recovery states for exports that need support |
@@ -101,7 +103,7 @@ The front end calls a REST API at `https://api.autorecordlive.com/api/v1` with a
 | Area | Endpoints |
 | --- | --- |
 | Auth | `POST /auth/register`, `/auth/login`, `/auth/google`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`, `/auth/language`; `GET /auth/quota` |
-| Streamers | `POST /channels/inspect` (preview a URL before saving), `POST /channels/subscribe`, `GET /channels/subscriptions`, `POST /channels/subscriptions/:id/stop`, `.../start`, `DELETE /channels/subscriptions/:id` |
+| Streamers | `POST /channels/inspect` (preview a URL before saving), `POST /channels/subscribe`, `GET /channels/subscriptions`, `POST /channels/subscriptions/:id/stop`, `.../start`, `DELETE /channels/subscriptions/:id`. Requests, responses, and error codes are in the dashboard study |
 | Recordings | `GET /recordings?subscribed_only=true` (or `?channel_id=`), `GET /recordings/:id`, `GET /recordings/:id/playlist.m3u8`, `GET /recordings/:id/ai-content`, `GET /recordings/:id/transcript`, `GET /recordings/:id/subtitles.vtt` |
 | Exports | `POST /recordings/:id/export`, `GET /recordings/:id/export/status`, `GET /recordings/:taskId/export/download?token=…` |
 | Notifications | `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all`, `GET/PUT /notifications/settings` |
@@ -122,22 +124,9 @@ The preview playlist caps `max_segment_index` at 4 (5 × 60 s = 300 s) and needs
 
 ## Data shapes
 
-Fields the API actually returns:
+Fields the API actually returns. Streamer shapes (subscriptions, inspect, subscribe) are in the dashboard study.
 
 ```jsonc
-// GET /channels/subscriptions?page=1&pageSize=12&platform=&status= → { data: [...], pagination: { page, page_size, total, total_pages } }
-{
-  "id": "89c4…", "channel_id": "c75a…", "platform": "TikTok",
-  "url": "https://www.tiktok.com/@name/live", "host_name": "name", "avatar": "https://…",
-  "room_name": "Current stream title", "is_living": true,
-  "status": "STOPPED", "status_label": "Stopped",
-  "subscribed_at": "2026-10-15T08:03:34+08:00", "last_seen_at": "2026-10-15T08:06:23+08:00",
-  "channel_recording_count": 1, "user_recording_count": 0
-}
-
-// POST /channels/inspect { url }
-{ "name": "name-Current stream title", "platform": "TikTok", "avatar": "https://…tiktokcdn…", "status": "Not live", "status_label": "Not live" }
-
 // GET /recordings?offset=0&limit=20&subscribed_only=true → { items: [...], limit, offset, total }
 {
   "id": "c88c…", "session_id": "ca20…", "platform": "tiktok", "title": "Stream title",
@@ -235,18 +224,18 @@ Fields the API actually returns:
 
 ## Known issues
 
-Problems seen while using the app. The [roadmap](./roadmap.md#what-we-do-better) says how we fix each one.
+Problems seen while using the app. The roadmap says how we fix each one.
 
 | # | Issue | Where |
 | --- | --- | --- |
 | R1 | "Dashboard" shows only the streamer list. Strings for stat cards ("Recording Now", "Today's Sessions", "Abnormal Issues", "Storage Health") ship in the bundle but nothing uses them | `/` |
-| R2 | Live status goes stale: a streamer stopped 9 days ago still shows a green dot and `is_living: true`, while `POST /channels/inspect` for the same streamer says "Not live" | Streamer card |
+| R2 | Live status goes stale. Only listening streamers are checked, so a stopped one keeps its last value: a streamer stopped 9 days ago still shows a green dot and `is_living: true`, while `POST /channels/inspect` for the same streamer says "Not live". "Last seen" is the last time a listener recorded the stream, not the last check, so a streamer that is live now can show "Last seen Jul 15" | Streamer card |
 | R3 | On desktop (seen at 1280px and 1368px) the streamer name truncates to "val…" and the Resume button shrinks to "R…" or a bare play icon; cards are a fixed 210px wide with empty space beside them | Streamer grid |
 | R4 | Card controls are icons explained only by a hover `title`, e.g. a lock with "1" that means "1 recording, preview only". They have no `aria-label` (the header icons do) | Streamer card |
 | R5 | Usage card says "REMAINING 100%" next to "0m" (the 100% is usage). The quota API reports `-120` remaining seconds. The trial ended on Oct 22, but nothing says so: the subscription page still shows "Current plan: Free Trial" three times and status "Free Trial" | Sidebar, Subscription |
 | R6 | Expired recordings show "Retention expired" twice, stay in the list, and do nothing when clicked. Opening one by URL says it has expired and, beside that, "Upgrade your plan to unlock full playback". The API still returns `READY` with a preview URL | Recordings |
 | R7 | Refresh buttons on every page, while updates are uneven: streamers poll every 30 s and notifications every 60 s (only while the tab is visible), and each page load fetches `/auth/quota` three times | All lists |
-| R8 | Add Streamer makes you pick the platform even though it detects it from the link; you can't add more than one streamer at a time; Escape doesn't close the modal. It has no `role="dialog"`, focus stays on the page behind it, and the close button has no label | Add Streamer modal |
+| R8 | Add Streamer makes you pick the platform even though it detects it from the link: only a paste flips it, and a typed link of the other platform gets a contradictory error. You can't add more than one streamer at a time; Escape doesn't close the modal. It has no `role="dialog"`, focus stays on the page behind it, and the close button has no label | Add Streamer modal |
 | R9 | The header icon shortcuts repeat the sidebar links; there's no search | Header |
 | R10 | Portrait video sits centered in empty space. The outline does seek the video, but it starts below the fold, so you can't see chapters and video together. Highlights past 5:00 can't play on the free plan | Recording detail |
 | R11 | Strings for Batch Import, Record Rules, and View Files exist in the code, but none of these features is built | — |
@@ -260,7 +249,10 @@ Problems seen while using the app. The [roadmap](./roadmap.md#what-we-do-better)
 | R19 | "Forgot password?" links to `/forgot-password`, which has no route, so the catch-all sends you to `/`. The app has no password reset, password change, or account deletion | Auth |
 | R20 | The trial overshoots its quota: recordings keep running to 12:00 on a 10-minute allowance (`used_seconds: 720` of 600), and 42 of the 50 newest public recordings are exactly 12:00 long | Recording, Quota |
 | R21 | Notifications name the stream by its room title ("You successfully added VALORANT Champions Tour Brazil"), not the streamer, because `channel_display_name` holds the room title. The inspect preview joins both ("name-Room title") | Notifications, Add Streamer |
-| R22 | Add Streamer says "Streamer detected and listening enabled" before anything is saved, for a streamer already in the list, on an account with no recording time left | Add Streamer modal |
+| R22 | Add Streamer says "Streamer detected and listening enabled" before anything is saved, for a streamer already in the list, with every listener in use, and on an account with no recording time left. Adding a streamer that's already in the list then says "Streamer saved and listening started." and changes nothing | Add Streamer modal |
 | R23 | Recordings can only be filtered by platform: there's no streamer, date, or status filter, and no sort. The card's history button opens `/recordings?channel_id=…`, but the page shows no sign of that filter and no way to clear it | Recordings |
 | R24 | An abandoned checkout stays "Pending" in payment history a week later, with "Plan details are not available for this transaction" | Payment history |
 | R25 | Umami session replay records every session (sample rate 1, "moderate" masking), and the app shows no consent prompt | Whole app |
+| R26 | The listener limit is invisible. Past it, Add Streamer saves the streamer as stopped and only says "Streamer saved, but listening has not started yet."; the server's reason (`active_listener_limit_exceeded`) is never shown. Resume answers HTTP 500 and opens an upgrade prompt that doesn't suggest stopping another streamer. No screen says how many listeners are in use, and the list can't be sorted, so the one listening streamer can sit on page 2 | Streamers, Add Streamer |
+| R27 | Add Streamer's check misfires. Usernames under 5 characters (`@nba`) aren't checked until the field loses focus, each typed username is checked twice, checks run in parallel get `429` shown as "Recording resources are busy", and an unknown username says "This account has not enabled live streaming." | Add Streamer modal |
+| R28 | Recording starts late. When listening starts on a streamer that is already live (the preview said "Live now"), recording starts about 100 s later (100 s and 97 s in two tries), so that part of the stream is lost | Listener |
