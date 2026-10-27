@@ -1,6 +1,6 @@
 # User flows: hosts
 
-How people follow hosts, keep them listening, and get their broadcasts recorded on `/hosts`. This is the detailed workflow for one screen; the rest of the app (sitemap, recordings, accounts) is in [user flows](./user-flows.md). How the reference app does the same job: [Streamers dashboard](./ref-app-dashboard.md). Principles P1–P8 are the product principles in the roadmap.
+How people follow hosts, keep them listening, and get their broadcasts recorded on `/hosts`. This is the detailed workflow for one screen; the rest of the app (sitemap, recordings) is in [user flows](./user-flows.md). How the reference app does the same job: [Streamers dashboard](./ref-app-dashboard.md). Principles P1–P8 are the product principles in the roadmap.
 
 Flow numbers (1, 2, 4) match user flows, so references elsewhere stay valid.
 

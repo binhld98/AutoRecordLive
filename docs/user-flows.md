@@ -19,11 +19,7 @@ How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1
 - **Running out of hours pauses recording, never the app** (flow 7).
 - **Usage shows on the Overview and `/account` only.** The one exception is the listener count, which `/hosts` also shows because that's where listening is managed. Anywhere else, a limit appears only where it blocks something, saying why, with a link to the plan in `/account`. That page gets an Upgrade button once billing exists.
 
-**Accounts**
-
-- **Email is the account.** The same email signs in with Google or with a password.
-- **Nothing works until the email is verified.** A signed-in but unverified user only sees `/verify-email`. Google sign-ins are verified already, and so is anyone who completes a password reset.
-- **Google sign-in on an unverified account takes it over.** Google proves the address, so we verify the account and drop its unproven password. This stops someone from registering another person's email first and keeping a way in.
+**Accounts:** see the [account user flows](./user-flows-auth.md): sign-up, sign-in, email verification, and password reset.
 
 ## Feedback: toast, notification, or status
 
@@ -75,8 +71,6 @@ flowchart TD
   notifs -- "notification link" --> rec & hosts & account
 ```
 
-- **Signed out:** every app route sends you to `/login?redirect=<path>`, and signing in returns you there.
-- **Signed in, unverified:** every app route shows `/verify-email` until the email is verified, then continues to where you were going.
 - **Sidebar:** Overview, Hosts, Recordings, Notifications (unread badge), Account.
 - **Recordings filters:** which filters `/recordings` has, and their URL params, aren't decided yet.
 - **Recordings that aren't there:** a removed, expired, or deleted recording at `/recordings/:id` opens a page that says what happened, when, and what you can do (Restore, or back to Recordings), not the generic not-found page (R16).
@@ -150,57 +144,11 @@ flowchart TD
   keep --> resetday["Reset day: listening hosts record again"]
 ```
 
-### 8. Sign up and verify
-
-```mermaid
-flowchart TD
-  reg(["/register"]) --> how{"How?"}
-  how -- "Continue with Google" --> google["Google consent"] --> exists{"Email has an account?"}
-  exists -- "yes" --> signin["Signed in to it; verified now if it wasn't"]
-  exists -- no --> created["Account created, already verified"]
-  signin --> app["/ (or the ?redirect= target)"]
-  created --> app
-  how -- "Email + password" --> form["Email, password (inline errors)"]
-  form -- "email has an account" --> taken["'This email has an account' + Sign in and Forgot password links"]
-  form -- ok --> gate["/verify-email: 'Check your inbox for a link'<br/>Resend, 'Use a different email' (signs out → /register)"]
-  gate --> link["Email link → /verify-email?token="]
-  link -- valid --> app
-  link -- "expired / used" --> bad["'This link expired' + Resend"]
-```
-
-### 9. Sign in
-
-```mermaid
-flowchart TD
-  visit(["Any app URL while signed out"]) --> login["/login?redirect=path"]
-  login --> how{"How?"}
-  how -- Google --> verified["Signed in (Google means verified)"]
-  how -- "Email + password" --> check{"Correct?"}
-  check -- no --> err["'Email or password is wrong' + Forgot password? link"]
-  check -- yes --> isverified{"Email verified?"}
-  isverified -- no --> gate["/verify-email (flow 8)"]
-  isverified -- yes --> verified
-  verified --> back["App start: refresh session, show loading, then the redirect target"]
-```
-
-The error never says whether the email exists or signs in with Google only.
-
-### 10. Reset password
-
-```mermaid
-flowchart TD
-  forgot(["/forgot-password"]) --> email["Enter email"]
-  email --> sent["Always: 'If an account exists, we sent a link' (no account probing)"]
-  sent --> link["Email link → /reset-password?token="]
-  link -- valid --> newpw["New password"] --> done["'Password changed' → /login<br/>Email verified; other sessions signed out"]
-  link -- "expired / used" --> bad["'This link expired' + Send a new link"]
-```
-
-This is also how a Google-only account adds a password. `/account` lists the sign-in methods an account has.
+Flows 8 (Sign up and verify), 9 (Sign in), and 10 (Reset password) are in the account user flows.
 
 ## Principles check
 
-Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows.
+Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, and 8, 9, and 10 in the account user flows.
 
 | Flow | No dead ends (P4) | Nothing disappears silently (P8) | Other |
 | --- | --- | --- | --- |
@@ -208,6 +156,3 @@ Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, pl
 | 5. Remove a recording | Undo, Restore, and a page for links to removed recordings | Every bin row shows the day it's deleted for good | P7 removal affects only you |
 | 6. Expires | Expired links open a page with a way back | Retention line, warning 3 days before, page says when and why (R16) | P7 only followers see it |
 | 7. Time runs out | Paused hosts say when recording resumes and link to the plan | Warnings at 80% and 100% before anything stops, plus a forecast | P1 live status keeps updating |
-| 8. Sign up and verify | Resend, and 'Use a different email' for a typo | — | — |
-| 9. Sign in | Wrong password links to Forgot password; unverified goes to the verify page; redirect returns you | — | — |
-| 10. Reset password | Expired link offers a new one | Other sessions are signed out, and the page says so | — |
