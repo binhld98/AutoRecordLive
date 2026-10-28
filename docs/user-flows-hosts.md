@@ -1,6 +1,6 @@
 # User flows: hosts
 
-How people follow hosts, keep them listening, and get their broadcasts recorded on `/hosts`. This is the detailed workflow for one screen; the rest of the app (sitemap, recordings) is in [user flows](./user-flows.md). How the reference app does the same job: [Streamers dashboard](./ref-app-dashboard.md). Principles P1–P8 are the product principles in the roadmap.
+How people follow hosts, keep them listening, and get their broadcasts recorded on `/hosts`. This is the detailed workflow for one screen; the rest of the app (sitemap, recordings) is in [user flows](./user-flows.md), and the wording of its messages is in the [notifications user flows](./user-flows-notifications.md). How the reference app does the same job: [Streamers dashboard](./ref-app-dashboard.md). Principles P1–P8 are the product principles in the roadmap.
 
 Flow numbers (1, 2, 4) match user flows, so references elsewhere stay valid.
 
@@ -146,7 +146,7 @@ flowchart TD
   hours -- yes --> rec["Recording starts by itself: 'Recording · 0:00'"]
   hours -- no --> blocked["Card: 'No recording time left. Recording resumes on Nov 1.'"]
   rec --> during{"During the stream"}
-  during -- "user clicks Stop listening, confirms" --> stopped["Toast 'Stopped listening, 42 min kept'<br/>Host is not listening"]
+  during -- "user clicks Stop listening, confirms" --> stopped["Toast 'Stopped listening to @host, 42 min kept'<br/>Host is not listening"]
   during -- "stream drops, comes back" --> gap["Same recording continues, gap saved with its reason"]
   gap --> during
   during -- "hours run out" --> cut["Stops at the limit, kept up to there (flow 7)"]
@@ -188,16 +188,7 @@ flowchart TD
 
 ## Feedback
 
-| Event | Toast | Notification | Status on the card |
-| --- | --- | --- | --- |
-| Hosts added | "Added 3 hosts" (and "2 saved, not listening") | — | Their state |
-| Resume / Stop listening | "Listening to @host" / "Stopped listening to @host" | — | Listening / Not listening |
-| Host went live | — | "@host went live" (per settings) | "Live" |
-| Stopped listening while recording | "Stopped listening, 42 min kept" | — | "Not listening" |
-| Recording ready or failed | — | "Recording of @host is ready" / what failed and what we kept | — |
-| Hours at 80% / 100% | — | Yes, with the forecast (flow 7) | "Recording paused: no time left" at 100% |
-| Listener limit dropped | — | Names the hosts stopped | Not listening |
-| Host removed | "Removed @host" | — | Leaves the list |
+Every toast, notification, confirmation, and inline message in these flows, with its exact wording, is in the message catalog of the notifications user flows.
 
 ## Edge cases
 
@@ -205,7 +196,7 @@ flowchart TD
 | --- | --- |
 | The same host pasted twice in one Add | One row; the duplicate says "Already in this list" |
 | Host renames its username | Kept by channel ID; the card shows the new name |
-| Host deleted or banned on the platform | Checks fail; after a day the card says "Can't reach this host on TikTok" and the host keeps listening so it records if it returns. The user can stop listening |
+| Host deleted or banned on the platform | Checks fail; after a day the card says "Can't reach this host on TikTok", one notification says the same, and the host keeps listening so it records if it returns. The user can stop listening |
 | Two tabs act on the same host | The server applies actions in order; the list shows the final state within the next update |
 | Resume listening while another tab took the last listener | Server answers `409 listener_limit_reached`; the card shows the disabled reason |
 | Stop listening at the moment the stream ends | The recording is kept; whichever comes first wins |

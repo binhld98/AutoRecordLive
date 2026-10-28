@@ -21,17 +21,7 @@ How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1
 
 **Accounts:** see the [account user flows](./user-flows-auth.md): sign-up, sign-in, email verification, and password reset.
 
-## Feedback: toast, notification, or status
-
-A toast isn't a notification. Each kind of feedback has one job:
-
-| Kind | When | Where it lives |
-| --- | --- | --- |
-| **Toast** | Result of something you just did: hosts added, a host started or stopped listening, recording removed (with Undo) | Pops up once and disappears. Nothing is stored |
-| **Notification** | Something happened without you: host went live, recording ready or failed, recording stopped at the limit, usage at 80% / 100%, recording expires soon | Stored in `/notifications` with an unread badge in the sidebar, plus email or other channels per the notification settings |
-| **Status** | What's true right now | On the item itself: badges on host cards, retention line on recording cards |
-
-So adding a host gives a toast and the host appears with its status, but no notification (the reference sends one, R21).
+**Notifications and messages:** see the [notifications user flows](./user-flows-notifications.md): when to use a toast, a notification, a status, an inline message, or a confirmation, and the catalog of every core message.
 
 ## Sitemap
 
@@ -144,11 +134,11 @@ flowchart TD
   keep --> resetday["Reset day: listening hosts record again"]
 ```
 
-Flows 8 (Sign up and verify), 9 (Sign in), and 10 (Reset password) are in the account user flows.
+Flows 8 (Sign up and verify), 9 (Sign in), and 10 (Reset password) are in the account user flows. Flows 11 (A notification reaches you), 12 (Read and act on notifications), and 13 (Choose what reaches you) are in the notifications user flows.
 
 ## Principles check
 
-Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, and 8, 9, and 10 in the account user flows.
+Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, 8, 9, and 10 in the account user flows, and 11, 12, and 13 in the notifications user flows.
 
 | Flow | No dead ends (P4) | Nothing disappears silently (P8) | Other |
 | --- | --- | --- | --- |

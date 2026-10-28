@@ -2,10 +2,11 @@
 
 This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
-- What the reference app does, and its known issues (R1–R28): [reference app study](./ref-app-study.md)
+- What the reference app does, and its known issues (R1–R38): [reference app study](./ref-app-study.md)
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
 - How people move through the app: [user flows and sitemap](./user-flows.md)
 - How hosts are followed, listened to, and recorded: [hosts user flows](./user-flows-hosts.md)
+- When the app uses a notification, a toast, or another message, and what each one says: [notifications user flows](./user-flows-notifications.md)
 
 ## Product principles
 
@@ -54,17 +55,23 @@ How we fix each known issue from the reference app study, and the step where it 
 | R26 Invisible listener limit | Rows past the limit say "Will be saved, not listening: all 5 listeners in use" before Add. Resume listening when all are in use is disabled with "Stop listening to another host to free one". `/hosts`, the Overview, and `/account` say "3 of 5 listeners in use". The API answers `409` with a code, never `500` | 3, 5, BE |
 | R27 Add Streamer's check misfires | One check per pasted line, of any length, batched into one request. A line that couldn't be checked says so with Retry; an unknown username says "Not found" | 3, BE |
 | R28 Recording starts late | Adding a host or resuming listening reuses the latest live check, so a host that is live starts recording at once | BE |
+| R33 Own clicks fill the inbox | Your own actions get a toast, never a notification: adding 15 hosts is one toast | 3, 6, BE |
+| R34 What matters never arrives | Notifications when a host goes live, a recording is ready or failed, hours reach 80% and 100%, a recording is about to expire, the listener limit drops, or a host can't be reached | 6, BE |
+| R35 Notification links lead nowhere | Every notification opens the host, recording, or plan it's about; a link to something gone opens a page that says why | 6 |
+| R36 Inbox hard to use | `/notifications` with an Unread filter and Mark all read, a sidebar badge, and a list that updates by itself. No bell panel | 6 |
+| R37 Pop-up shows one and isn't announced | No pop-ups: a new notification updates the badge and the item in place. The badge's label includes the count. Browser push is opt-in | 6, P3 |
+| R38 Email-only, account-wide settings | In the app and Email switches per event, with live alerts per host. Problems always show in the app | 6, BE |
 
 ## Where we go further
 
-Fixing R1–R28 gets us level with the reference. These upgrades put us ahead. Each one answers something the study found: a weak spot, or an asset the reference has but barely uses.
+Fixing R1–R38 gets us level with the reference. These upgrades put us ahead. Each one answers something the study found: a weak spot, or an asset the reference has but barely uses.
 
 | Upgrade | What it is | Answers | Step |
 | --- | --- | --- | --- |
 | Recording health | Each recording shows how much of the broadcast it captured. Gaps are marked on the player's timeline with the reason ("stream dropped for 40 s, reconnected"). A reconnect during the same broadcast continues the same recording instead of starting a new part | Operator-only repair tools, unbuilt "Abnormal Issues", confusing parts (R12) | 2, 4, BE |
 | Instant download | Record HLS as fragmented MP4 (CMAF) segments. A download is the init segment plus the media segments, streamed by the API as one `.mp4`. It starts at once: no export job, no "your file is ready" email, no 36-hour cache | Exports that queue, then expire | 4, BE |
 | Usage forecast | The overview says "At this pace your recording time runs out on Oct 28" and shows usage per host. Warnings arrive at 80% and 100% before recording stops | Listening stops without warning when the quota runs out | 5, BE |
-| Live alerts | A "host went live" notification with a link to the live stream, with per-host settings for in-app, email, Telegram, Discord webhook, and browser push | Only account-wide email settings | 6, P3 |
+| Live alerts | A "host went live" notification with a link to the live stream, with per-host settings for in-app, email, Telegram, Discord webhook, and browser push | Only account-wide email settings, and no live alert (R34, R38) | 6, P3 |
 | Watch while recording | Play a recording while it's still in progress; the uploader keeps the HLS playlist growing as segments arrive | You wait for the stream to end | P3 |
 | Section downloads | On the recording page, select one or more sections on the timeline and download each as its own `.mp4`. With short (about 6 s) segments, a section is a slice of the segment list | Whole-file exports cut short by the quota; 60 s segments | 4, BE |
 | Recycle bin | Removing a recording moves it to a recycle bin, where it can be restored for 30 days. Each one shows the day it's deleted for good | — | 4, BE |
@@ -126,13 +133,14 @@ npm install @tanstack/react-query
   - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself (`fe-arch.md`).
   - `Recording.removedAt` and `deletesAt` (for the recycle bin).
   - `Quota`: recording hours used and allowed with `resetsAt`, listeners used and allowed, and `runsOutAt`: when recording time runs out at the current pace, or `null` (for the usage forecast). No download quota.
+  - `Notification.type`: an ID from the message catalog, with `values` for its text and a `link`, instead of finished sentences.
 - `src/lib/api.ts`, the fake API:
   - Hosts: `listHosts()` (the whole list), `inspectUrls(urls)`, `addHosts(urls)`, `startListening(id)`, `stopListening(id)`, `removeHost(id)`.
   - Recordings: `listRecordings(filters, cursor?)`, `getRecording(id)`, `getSectionDownloadUrl(id, startSec, endSec)`, `removeRecording(id)`, `restoreRecording(id)`, `listRemovedRecordings(cursor?)`.
-  - Notifications: `listNotifications(cursor?)`, `markRead(id)`, `markAllRead()`, `getNotificationSettings()`, `updateNotificationSettings(settings)`.
+  - Notifications: `listNotifications({ unreadOnly }, cursor?)`, `getUnreadCount()`, `markRead(id)`, `markAllRead()`, `getNotificationSettings()`, `updateNotificationSettings(settings)`.
   - Other: `getQuota()`, `getOverview(since)`.
   - Paged lists return `{ items, nextCursor, total }`.
-  - Add a short delay to every call. Make the data change over time (a host goes live, a new recording appears) and make a few calls fail at random, so loading, refetch-on-focus, and error states get exercised.
+  - Add a short delay to every call. Make the data change over time (a host goes live, a new recording and its notification appear) and make a few calls fail at random, so loading, refetch-on-focus, and error states get exercised.
 - `src/lib/format.ts`: `formatDuration`, `formatBytes`, and `formatRelative` ("8d ago") using the built-in `Intl` APIs.
 - Wrap the app in a `QueryClientProvider`. Pages read data with `useQuery` / `useInfiniteQuery`, refetching on window focus and after the user's own changes, instead of a Refresh button.
 
@@ -160,6 +168,7 @@ Add `"test": "vitest"` to the `package.json` scripts.
   - New hosts start listening while listeners are free. Each row says what Add will do, including "Will be saved, not listening" once listeners run out.
   - **Add** saves every valid row in one `addHosts` call.
 - Empty state: "No hosts yet. Paste a TikTok or Douyin link to start."
+- Toast, confirmation, and inline text goes in `src/lib/messages.ts`, keyed by the message catalog's IDs, so later steps and notifications reuse it.
 
 ### Step 4 — Recordings (`feat/recordings`)
 
@@ -190,9 +199,11 @@ The reference doesn't have this page. It reads one `getOverview(since)` call, be
 
 ### Step 6 — Notifications (`feat/notifications`)
 
-- List with level-tinted rows, "Load more" (`useInfiniteQuery`), and mark all read.
-- Unread count badge in the sidebar.
-- Settings dialog with switches for host went live, recording started / completed / failed, recording expires soon, and usage warnings (80% and 100%), plus per-host overrides.
+Build the screen, settings dialog, and badge from the notifications user flows.
+
+- `/notifications`: an All / Unread filter in the URL, "Load more" (`useInfiniteQuery`), and **Mark all read**. Each type's text comes from `src/lib/messages.ts`.
+- Unread count badge on the sidebar's Notifications link, from `getUnreadCount()`.
+- Settings dialog with In the app and Email switches per event, and live alerts per host.
 - Wire the ⌘K search from step 1 to hosts and recordings.
 
 ### Step 7 — Auth (`feat/auth`)
