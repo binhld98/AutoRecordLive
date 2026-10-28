@@ -7,6 +7,7 @@ Deep studies of single screens:
 - [Streamers dashboard](./ref-app-dashboard.md): the streamer list, Add Streamer, live status, and the active listener limit (studied 2026-10-26).
 - [Recordings](./ref-app-recordings.md): the recordings list, the detail page and player, exports, and what the free plan locks (studied 2026-10-27).
 - [Notifications](./ref-app-notifications.md): the inbox, the header bell and its pop-up, read state, links, email settings, toasts, and every notification type (studied 2026-10-28).
+- [Subscription](./ref-app-subscription.md): the subscription settings and payment history tabs, every plan state, cancelling auto-renew, and billing errors (studied 2026-10-28).
 
 The overview was last studied on 2026-10-24 on a Free Trial account (trial ended 2026-10-22) with one followed streamer. Methods: using the app at desktop and phone widths, reading its JavaScript bundle, and calling its API with read-only requests.
 
@@ -46,7 +47,7 @@ Every signed-in page shares one shell:
 | `/recordings/:platform/:recordingId` | Recording detail | Header card, player, Refresh / Download / Replay, a side column, AI sections, related recordings |
 | `/recordings/export-download` | Export download | Refreshes the session, asks `export/status` for a short-lived download link for the `task_id` and `platform` query params, and opens it |
 | `/notifications` | Notifications | Unread count, Refresh, list of notifications with "Load more". See the notifications study |
-| `/settings/subscription`, `/settings/subscription/history` | Subscription | Tabs: Subscription settings / Payment history. `/subscription` and `/subscription/history` redirect here |
+| `/settings/subscription`, `/settings/subscription/history` | Subscription | Tabs: Subscription settings / Payment history. `/subscription` and `/subscription/history` redirect here. See the subscription study |
 | `/upgrade`, `/payment/success` | Checkout | Plan picker and the page Stripe/PayPal return to |
 | `/admin/*` | Operator console | Recording repair, metadata repair, export recovery, retention, publication, AI content, impersonation, trial anti-abuse, system notice. Internal only |
 | `*` | Catch-all | Redirects to `/` (or to `/verify-email` when the URL has a `token`) |
@@ -59,7 +60,7 @@ Every signed-in page shares one shell:
 
 **Notification row, header bell, pop-up, and email settings:** see the notifications study.
 
-**Subscription settings:** Current plan and Billing status cards, then Subscription details (plan, paid subscription, status, access until) with an **Upgrade plan** button. **Payment history** lists transactions as cards (plan, status badge, amount, gateway, created at), with Previous/Next paging.
+**Subscription settings and payment history:** see the subscription study.
 
 **Upgrade page:** a current-plan card, then the Pay as you go pack, then a Monthly / Yearly · Save 20% toggle over three plan cards (Starter "Recommended", Standard "Best Value", Premium "High Volume"), then a short FAQ. Payment is by card (Stripe) or PayPal.
 
@@ -92,7 +93,8 @@ From `GET /payments/plans`. Prices are in cents in the API. Yearly plans cost ab
 | Recording | `PENDING`, `RECORDING`, `PROCESSING`, `READY`/completed, `FAILED` |
 | Retention | `EXPIRED`, `POLICY_UNKNOWN` (shown as "Retention pending confirmation"); the UI also has deleting and deleted; more in the operator console |
 | Export | not requested, preparing, ready, failed, expired, plus manual-recovery states for exports that need support |
-| Transaction | `pending`, succeeded, and refund states; `transaction_type` such as `credit_purchase` |
+| Transaction | `pending`, `succeeded`, `failed`, `refunded`, `partially_refunded`, plus a separate `refund_status`; `transaction_type` such as `credit_purchase` |
+| Subscription | `pending`, `active`, `past_due`, `cancelled`, `expired`; `cancel_at_period_end` marks a scheduled cancellation |
 | Notification level | `success`, `warning`, `info`, `error` |
 | Notification type | `subscription_succeeded` ("Streamer added"), `listener_started`, `listener_stopped` (manual, or system with `reason: quota_exceeded` → "Monitoring auto-stopped"), `recording_started`, `recording_completed`, `recording_failed`, `recording_export_ready`, `recording_export_failed`, and payment success, renewal failed, cancel effective, refund result |
 
@@ -251,7 +253,7 @@ Problems seen while using the app. The roadmap says how we fix each one.
 | R21 | Notifications name the stream by its room title ("You successfully added VALORANT Champions Tour Brazil"), not the streamer, because `channel_display_name` holds the room title. The inspect preview joins both ("name-Room title") | Notifications, Add Streamer |
 | R22 | Add Streamer says "Streamer detected and listening enabled" before anything is saved, for a streamer already in the list, with every listener in use, and on an account with no recording time left. Adding a streamer that's already in the list then says "Streamer saved and listening started." and changes nothing | Add Streamer modal |
 | R23 | Recordings can only be filtered by platform: there's no streamer, date, or status filter, and no sort. The card's history button opens `/recordings?channel_id=…`, but the page shows no sign of that filter and no way to clear it | Recordings |
-| R24 | An abandoned checkout stays "Pending" in payment history a week later, with "Plan details are not available for this transaction" | Payment history |
+| R24 | An abandoned checkout stays "Pending" in payment history, still 11 days later. Like every Pay as you go purchase, it reads "Plan details are not available for this transaction", because that line expects a subscription plan | Payment history |
 | R25 | Umami session replay records every session (sample rate 1, "moderate" masking), and the app shows no consent prompt | Whole app |
 | R26 | The listener limit is invisible. Past it, Add Streamer saves the streamer as stopped and only says "Streamer saved, but listening has not started yet."; the server's reason (`active_listener_limit_exceeded`) is never shown. Resume answers HTTP 500 and opens an upgrade prompt that doesn't suggest stopping another streamer. No screen says how many listeners are in use, and the list can't be sorted, so the one listening streamer can sit on page 2 | Streamers, Add Streamer |
 | R27 | Add Streamer's check misfires. Usernames under 5 characters (`@nba`) aren't checked until the field loses focus, each typed username is checked twice, checks run in parallel get `429` shown as "Recording resources are busy", and an unknown username says "This account has not enabled live streaming." | Add Streamer modal |
@@ -266,3 +268,7 @@ Problems seen while using the app. The roadmap says how we fix each one.
 | R36 | The inbox is hard to use. Mark all read is only in the header bell's panel, which shows 8 and doesn't link to the inbox. There's no filter (though the API takes `status=unread`), delete, or mark unread. The bell polls every 60 s and the inbox doesn't, so the badge counts notifications the page doesn't list | `/notifications`, Header |
 | R37 | The pop-up for new notifications shows only the newest of several (the rest never pop up), stays until closed or you change pages, shares its corner with toasts, and has no `aria-live`, so screen readers miss it. The bell's label leaves out the unread count | Header |
 | R38 | Notification settings are four account-wide email checkboxes: nothing for in-app, nothing per streamer. The subscribe response carries per-streamer flags and Add Streamer ships unused "Notify via Email / Push Notification" strings, but no screen uses them. Escape doesn't close the popover | Header |
+| R39 | Billing status contradicts itself (from the code). Every status except past due and a scheduled cancellation reads "Your subscription is active and set to renew automatically.", under "Cancelled" and "Expired" too. Pay as you go gets it under "No active paid subscription", while its plan card says it "does not renew automatically" and its date reads "Renews on --" | Subscription |
+| R40 | Cancelling is easy and can't be undone. On the upgrade page, Cancel auto-renew cancels on the first click; the subscription page at least asks first. Afterwards "Reactivate Subscription" is a disabled button that says to contact support | Subscription, Upgrade |
+| R41 | No billing self-service: no receipts or invoices, no way to update a card (a failed renewal needs a fresh checkout), refunds only through support although the API takes refund requests, and no downgrade or monthly/yearly switch | Subscription, Payment history |
+| R42 | Errors show the HTTP library's raw "Network Error" instead of the app's own messages. A failed load replaces the whole subscription page, tabs included, and Payment history's error has no Retry | Subscription, Payment history |

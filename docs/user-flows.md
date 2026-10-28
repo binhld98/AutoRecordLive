@@ -13,6 +13,7 @@ How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1
 - **Two limits: recording hours per month and active listeners.** Hours reset monthly. Downloads are unlimited (rate-limited against abuse), and storage is capped by hours and retention, so there's no download or storage quota.
 - **Running out of hours pauses recording, never the app** (flow 7).
 - **Usage shows on the Overview and `/account` only.** The one exception is the listener count, which `/hosts` also shows because that's where listening is managed. Anywhere else, a limit appears only where it blocks something, saying why, with a link to the plan in `/account`. That page gets an Upgrade button once billing exists.
+- **`/account` says the plan once, in a sentence with its date:** "Free trial · ends Nov 2", "Trial ended Oct 22", "Starter · renews Nov 28".
 
 **Accounts:** see the [account user flows](./user-flows-auth.md): sign-up, sign-in, email verification, and password reset.
 
