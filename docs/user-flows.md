@@ -6,12 +6,7 @@ How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1
 
 **Hosts and listeners:** see the [hosts user flows](./user-flows-hosts.md): listening, active listeners, live checks, recording, and removing hosts.
 
-**Recordings**
-
-- **The recording page is a simple editor** (flow 3). Select one or more sections on the timeline and download each as its own `.mp4`, or download the whole recording. Section edges snap to the recording's segments (about 6 s), so the file starts and ends where the timeline shows.
-- **Removed recordings go to a recycle bin** (flow 5). You can restore them. They're deleted for good after 30 days, or when their retention ends if that's sooner. There's no "delete forever" button.
-- **Removing a recording doesn't give back recording time.** Time counts when it's recorded.
-- **Removing a recording hides it only for you.** Recordings are shared per broadcast, so others who follow the host keep theirs.
+**Recordings:** see the [recordings user flows](./user-flows-recordings.md): watching, section downloads, the recycle bin, and retention.
 
 **Limits and usage**
 
@@ -62,65 +57,11 @@ flowchart TD
 ```
 
 - **Sidebar:** Overview, Hosts, Recordings, Notifications (unread badge), Account.
-- **Recordings filters:** which filters `/recordings` has, and their URL params, aren't decided yet.
-- **Recordings that aren't there:** a removed, expired, or deleted recording at `/recordings/:id` opens a page that says what happened, when, and what you can do (Restore, or back to Recordings), not the generic not-found page (R16).
 - **Removed from the reference:** `/add` and the export download route. Add hosts is a dialog on `/hosts`, and downloads start at once.
 
-## Core flows
+## Flows
 
-Flows 1 (Follow a host) and 2 (A host goes live and gets recorded) are in the hosts user flows.
-
-### 3. Watch, cut, or download a recording
-
-```mermaid
-flowchart TD
-  entry(["Notification, Overview latest recordings,<br/>/recordings, or a host's 'N recordings' link"]) --> list["/recordings, filtered to the host when opened from one"]
-  list --> card{"Card state"}
-  card -- "recording now" --> inprog["'Recording now · ready when the stream ends'"]
-  card -- "expired (hidden unless 'Show expired')" --> expired["Dimmed: 'Expired Oct 3 after 30 days' (flow 6)"]
-  card -- ready --> detail["/recordings/:id"]
-  detail --> editor["Player + timeline: recorded spans, gaps, chapter marks, playhead<br/>Chapter list beside it (stacked on phones)"]
-  editor --> watch["Watch: click the timeline or a chapter to jump"]
-  editor --> select["Select a section: drag on the timeline, set start/end at the playhead,<br/>or 'Select chapter'. Edges snap to about 6 s"]
-  select --> sections["Section list: '12:00–15:30 · 3m 30s · 42 MB'<br/>Shows 'includes a 40 s gap' when it spans one"]
-  sections --> previewsel["Play section to check it"]
-  sections --> dlsec["Download section: .mp4 starts at once"]
-  sections -- "add another" --> select
-  editor --> dlall["Download whole recording: .mp4 starts at once"]
-  watch -- "playback error" --> retry["Reload playlist, resume at the same time"]
-  retry -- "still failing" --> msg["Message with Retry and Download"]
-```
-
-Gaps show on the timeline as hatched spans; hovering one says why ("stream dropped for 40 s, reconnected"). The timeline's handles are big enough to drag on a phone (P6).
-
-## Secondary flows
-
-Flow 4 (Manage a host) is in the hosts user flows.
-
-### 5. Remove and restore a recording
-
-```mermaid
-flowchart TD
-  card(["Recording card or detail page: Remove"]) --> state{"Still recording?"}
-  state -- yes --> disabled["Remove disabled: 'Still recording. You can remove it when the recording ends.'"]
-  state -- no --> moved["Moved to the recycle bin<br/>Toast 'Moved to recycle bin' with Undo"]
-  moved -- Undo --> back["Back in /recordings"]
-  moved --> binlist["/recordings/recycle-bin: each row says 'Deleted for good on Nov 24'"]
-  binlist -- Restore --> restored["Toast; back in /recordings with its original retention"]
-  binlist -- "date reached" --> gone["Deleted for good<br/>Old links open 'Deleted on Nov 24: removed by you'"]
-  moved -. "link opened while in the bin" .-> inbin["Page 'In the recycle bin since Oct 25' with Restore"]
-```
-
-### 6. A recording expires
-
-```mermaid
-flowchart TD
-  ready["Recording ready"] --> line["Card and detail show one retention line: 'Expires Oct 3'"]
-  line --> warn["3 days before: notification<br/>'Recording of @host expires Oct 3. Download it to keep it.'"]
-  warn --> exp["Retention ends: files deleted"]
-  exp --> card["Card stays dimmed under 'Show expired' and says why it can't play"]
-  exp --> links["Old links open 'Expired Oct 3: your plan keeps recordings 30 days'<br/>with a link to /recordings"]
-```
+Flows 1 (Follow a host), 2 (A host goes live and gets recorded), and 4 (Manage a host) are in the hosts user flows. Flows 3 (Watch, cut, or download a recording), 5 (Remove and restore a recording), and 6 (A recording expires) are in the recordings user flows.
 
 ### 7. Recording time runs out
 
@@ -138,11 +79,8 @@ Flows 8 (Sign up and verify), 9 (Sign in), and 10 (Reset password) are in the ac
 
 ## Principles check
 
-Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, 8, 9, and 10 in the account user flows, and 11, 12, and 13 in the notifications user flows.
+Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, 3, 5, and 6 in the recordings user flows, 8, 9, and 10 in the account user flows, and 11, 12, and 13 in the notifications user flows.
 
 | Flow | No dead ends (P4) | Nothing disappears silently (P8) | Other |
 | --- | --- | --- | --- |
-| 3. Watch, cut, download | Expired and in-progress cards say why they can't play; playback errors offer Retry and Download | Sections that span a gap say so before download | P6 timeline works by touch |
-| 5. Remove a recording | Undo, Restore, and a page for links to removed recordings | Every bin row shows the day it's deleted for good | P7 removal affects only you |
-| 6. Expires | Expired links open a page with a way back | Retention line, warning 3 days before, page says when and why (R16) | P7 only followers see it |
 | 7. Time runs out | Paused hosts say when recording resumes and link to the plan | Warnings at 80% and 100% before anything stops, plus a forecast | P1 live status keeps updating |
