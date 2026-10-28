@@ -5,6 +5,7 @@ AutoRecordLive is modeled on https://app.autorecordlive.com. This document is th
 Deep studies of single screens:
 
 - [Streamers dashboard](./ref-app-dashboard.md): the streamer list, Add Streamer, live status, and the active listener limit (studied 2026-10-26).
+- [Recordings](./ref-app-recordings.md): the recordings list, the detail page and player, exports, and what the free plan locks (studied 2026-10-27).
 - [Notifications](./ref-app-notifications.md): the inbox, the header bell and its pop-up, read state, links, email settings, toasts, and every notification type (studied 2026-10-28).
 
 The overview was last studied on 2026-10-24 on a Free Trial account (trial ended 2026-10-22) with one followed streamer. Methods: using the app at desktop and phone widths, reading its JavaScript bundle, and calling its API with read-only requests.
@@ -43,7 +44,7 @@ Every signed-in page shares one shell:
 | `/add` | Add deep link | Opens Add Streamer; sends signed-out users to `/login?redirect=/add` |
 | `/recordings` | Recordings | Platform filter, result count, grid of recording cards. Takes a hidden `?channel_id=` filter |
 | `/recordings/:platform/:recordingId` | Recording detail | Header card, player, Refresh / Download / Replay, a side column, AI sections, related recordings |
-| `/recordings/export-download` | Export download | Turns `task_id`, `platform`, and `token` query params into an API download link and opens it |
+| `/recordings/export-download` | Export download | Refreshes the session, asks `export/status` for a short-lived download link for the `task_id` and `platform` query params, and opens it |
 | `/notifications` | Notifications | Unread count, Refresh, list of notifications with "Load more". See the notifications study |
 | `/settings/subscription`, `/settings/subscription/history` | Subscription | Tabs: Subscription settings / Payment history. `/subscription` and `/subscription/history` redirect here |
 | `/upgrade`, `/payment/success` | Checkout | Plan picker and the page Stripe/PayPal return to |
@@ -76,7 +77,7 @@ From `GET /payments/plans`. Prices are in cents in the API. Yearly plans cost ab
 
 - Every plan allows unlimited saved streamers; the listener limit caps how many are listening or recording at once. The dashboard study shows how it's counted.
 - Packs stack recording time and download traffic; listener limit and retention stay the same. The pack also carries `inactivity_pause_days: 30`, which the UI never explains.
-- On the free plan, playback stops after 300 seconds. The server enforces this by serving a preview playlist (`playlist.m3u8?preview=true`) that lists only the first five segments. Full playback and downloads work only for the user's **latest** recording; older ones answer `403 "full playback is available for latest recording only"`.
+- On the free plan, playback stops after 300 seconds. The server enforces this by serving a preview playlist (`playlist.m3u8?preview=true`) that lists only the first five segments. Full playback and downloads work only for the user's **latest** recording; older ones answer `403 "full playback is available for latest recording only"`. Yet an export of an older recording was accepted from its detail page (R31).
 - When an export is bigger than the remaining download quota, it only covers what the quota allows.
 - To stop repeat trials, adding a streamer sends a browser fingerprint (user agent, language, timezone, screen, device memory, CPU count, canvas and WebGL hashes).
 
@@ -103,7 +104,7 @@ The front end calls a REST API at `https://api.autorecordlive.com/api/v1` with a
 | --- | --- |
 | Auth | `POST /auth/register`, `/auth/login`, `/auth/google`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`, `/auth/language`; `GET /auth/quota` |
 | Streamers | `POST /channels/inspect` (preview a URL before saving), `POST /channels/subscribe`, `GET /channels/subscriptions`, `POST /channels/subscriptions/:id/stop`, `.../start`, `DELETE /channels/subscriptions/:id`. Requests, responses, and error codes are in the dashboard study |
-| Recordings | `GET /recordings?subscribed_only=true` (or `?channel_id=`), `GET /recordings/:id`, `GET /recordings/:id/playlist.m3u8`, `GET /recordings/:id/ai-content`, `GET /recordings/:id/transcript`, `GET /recordings/:id/subtitles.vtt` |
+| Recordings | `GET /recordings?subscribed_only=true` (plus `&channel_id=` for one streamer), `GET /recordings/:id`, `GET /recordings/:id/playlist.m3u8`, `GET /recordings/:id/ai-content`, `GET /recordings/:id/transcript`, `GET /recordings/:id/subtitles.vtt` |
 | Exports | `POST /recordings/:id/export`, `GET /recordings/:id/export/status`, `GET /recordings/:taskId/export/download?token=…` |
 | Notifications | `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all`, `GET/PUT /notifications/settings` |
 | Billing | `GET /payments/plans`, `POST /payments/checkout-sessions`, `POST /payments/subscription/upgrade-sessions`, `GET /payments/subscription`, `POST /payments/subscription/cancel`, `POST /payments/refunds`, `GET /payments/transactions` |
@@ -119,7 +120,7 @@ Without `subscribed_only=true`, `GET /recordings` returns every public recording
 - `pt`: base64 JSON with `recording_id`, `task_id`, `path_prefix`, `max_segment_index`, `access_mode` (`preview`), and `exp`, about 5 minutes ahead.
 - `ps`: the signature.
 
-The preview playlist caps `max_segment_index` at 4 (5 × 60 s = 300 s) and needs no bearer token. Thumbnails and avatars are plain public CDN URLs.
+The preview playlist caps `max_segment_index` at 4 (5 × 60 s = 300 s) and needs no bearer token. Full playback skips the CDN: its segments are presigned S3 URLs straight to a Backblaze B2 bucket, valid for 24 minutes (see the recordings study). Thumbnails and avatars are plain public CDN URLs.
 
 ## Data shapes
 
@@ -255,6 +256,10 @@ Problems seen while using the app. The roadmap says how we fix each one.
 | R26 | The listener limit is invisible. Past it, Add Streamer saves the streamer as stopped and only says "Streamer saved, but listening has not started yet."; the server's reason (`active_listener_limit_exceeded`) is never shown. Resume answers HTTP 500 and opens an upgrade prompt that doesn't suggest stopping another streamer. No screen says how many listeners are in use, and the list can't be sorted, so the one listening streamer can sit on page 2 | Streamers, Add Streamer |
 | R27 | Add Streamer's check misfires. Usernames under 5 characters (`@nba`) aren't checked until the field loses focus, each typed username is checked twice, checks run in parallel get `429` shown as "Recording resources are busy", and an unknown username says "This account has not enabled live streaming." | Add Streamer modal |
 | R28 | Recording starts late. When listening starts on a streamer that is already live (the preview said "Live now"), recording starts about 100 s later (100 s and 97 s in two tries), so that part of the stream is lost | Listener |
+| R29 | Playback starts and seeks slowly. Segments are 60 s of 1080p, about 60–70 MB each, and nothing plays until a whole one is in: on our 28 Mbit/s connection the first frame and every seek waited about 25 s | Recording detail |
+| R30 | Download isn't a download. It requests an export, prepared in the background; the file comes later through a notification. The Download button forgets the request when the page reloads, and nothing on the page shows that an export is ready | Recordings, Recording detail |
+| R31 | Access labels contradict each other. A 3:00 recording that the 300 s preview fully covers is still "Preview only" and "Upgrade required"; its card hides Download, but its detail page offers Download and the export goes through | Recordings, Recording detail |
+| R32 | AI content can be missing without a word. A day after recording, `ai-content` and `transcript` answered `404` for both of our recordings, and the detail page just left out the summary, chapters, and captions | Recording detail |
 | R33 | Your own clicks fill the inbox: 20 of our 24 notifications came from our own actions, a "Streamer added" for each of 15 streamers (also those that never started listening) plus "Monitoring started" and "Monitoring stopped". Each action also showed a toast, and its notification popped up again up to a minute later | Notifications |
 | R34 | What matters never arrives. No notification says a streamer went live, that listening couldn't start, or that recording time is running out (the download warning is email-only). The first sign is "Monitoring auto-stopped", after the fact | Notifications |
 | R35 | Notification links lead nowhere useful. "Streamer added" and "Monitoring started/stopped" open the whole streamer list. "Monitoring auto-stopped" opens an upgrade page that offers to restart "this channel" without knowing which one. "Export ready" never says the file is kept only 36 hours | Notifications |

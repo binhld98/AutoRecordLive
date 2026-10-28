@@ -6,6 +6,7 @@ This is the plan for getting from today's Hello World SPA to an AutoRecordLive t
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
 - How people move through the app: [user flows and sitemap](./user-flows.md)
 - How hosts are followed, listened to, and recorded: [hosts user flows](./user-flows-hosts.md)
+- How recordings are watched, downloaded, removed, and expire: [recordings user flows](./user-flows-recordings.md)
 - When the app uses a notification, a toast, or another message, and what each one says: [notifications user flows](./user-flows-notifications.md)
 
 ## Product principles
@@ -55,6 +56,11 @@ How we fix each known issue from the reference app study, and the step where it 
 | R26 Invisible listener limit | Rows past the limit say "Will be saved, not listening: all 5 listeners in use" before Add. Resume listening when all are in use is disabled with "Stop listening to another host to free one". `/hosts`, the Overview, and `/account` say "3 of 5 listeners in use". The API answers `409` with a code, never `500` | 3, 5, BE |
 | R27 Add Streamer's check misfires | One check per pasted line, of any length, batched into one request. A line that couldn't be checked says so with Retry; an unknown username says "Not found" | 3, BE |
 | R28 Recording starts late | Adding a host or resuming listening reuses the latest live check, so a host that is live starts recording at once | BE |
+| R29 Slow start and seeking | About 6 s segments instead of 60 s, so playback starts and seeks in a second or two | BE |
+| R30 Download is an export you wait for | Download is a plain link that starts at once, whole or by section (instant download) | 4, BE |
+| R31 Contradictory access labels | No preview limit. When a plan does lock something, the card and detail page say the same thing, and only when it limits the recording | 4 |
+| R32 AI content missing without a word | Chapters and transcript show their state: "Chapters are being prepared" or "Couldn't make chapters for this recording" | 4, BE |
+
 | R33 Own clicks fill the inbox | Your own actions get a toast, never a notification: adding 15 hosts is one toast | 3, 6, BE |
 | R34 What matters never arrives | Notifications when a host goes live, a recording is ready or failed, hours reach 80% and 100%, a recording is about to expire, the listener limit drops, or a host can't be reached | 6, BE |
 | R35 Notification links lead nowhere | Every notification opens the host, recording, or plan it's about; a link to something gone opens a page that says why | 6 |
@@ -69,11 +75,11 @@ Fixing R1–R38 gets us level with the reference. These upgrades put us ahead. E
 | Upgrade | What it is | Answers | Step |
 | --- | --- | --- | --- |
 | Recording health | Each recording shows how much of the broadcast it captured. Gaps are marked on the player's timeline with the reason ("stream dropped for 40 s, reconnected"). A reconnect during the same broadcast continues the same recording instead of starting a new part | Operator-only repair tools, unbuilt "Abnormal Issues", confusing parts (R12) | 2, 4, BE |
-| Instant download | Record HLS as fragmented MP4 (CMAF) segments. A download is the init segment plus the media segments, streamed by the API as one `.mp4`. It starts at once: no export job, no "your file is ready" email, no 36-hour cache | Exports that queue, then expire | 4, BE |
+| Instant download | Record HLS as fragmented MP4 (CMAF) segments. A download is the init segment plus the media segments, streamed by the API as one `.mp4`. It starts at once: no export job, no "your file is ready" email, no 36-hour cache | Exports that queue, then expire (R30) | 4, BE |
 | Usage forecast | The overview says "At this pace your recording time runs out on Oct 28" and shows usage per host. Warnings arrive at 80% and 100% before recording stops | Listening stops without warning when the quota runs out | 5, BE |
 | Live alerts | A "host went live" notification with a link to the live stream, with per-host settings for in-app, email, Telegram, Discord webhook, and browser push | Only account-wide email settings, and no live alert (R34, R38) | 6, P3 |
 | Watch while recording | Play a recording while it's still in progress; the uploader keeps the HLS playlist growing as segments arrive | You wait for the stream to end | P3 |
-| Section downloads | On the recording page, select one or more sections on the timeline and download each as its own `.mp4`. With short (about 6 s) segments, a section is a slice of the segment list | Whole-file exports cut short by the quota; 60 s segments | 4, BE |
+| Section downloads | On the recording page, select one or more sections on the timeline and download each as its own `.mp4`. With short (about 6 s) segments, a section is a slice of the segment list | Whole-file exports cut short by the quota; 60 s segments (R29) | 4, BE |
 | Recycle bin | Removing a recording moves it to a recycle bin, where it can be restored for 30 days. Each one shows the day it's deleted for good | — | 4, BE |
 | Share links | Share one recording or section through an unlisted link that expires and can be revoked | Everything public by default (R14) | P3 |
 | Find the moment | ⌘K searches the transcripts of all your recordings. Each result shows the spoken line and opens the player at that second | Transcripts that are generated but only used as (blocked) captions | P3 |
@@ -128,7 +134,7 @@ npm install @tanstack/react-query
 - `src/lib/types.ts`: `Host`, `Recording`, `Notification`, `Quota`, `Overview`, based on the reference app's data shapes but in `camelCase`. Add what the reference lacks:
   - `Host.liveStatus` (`live`, `offline`, `unknown`) and `Host.lastCheckedAt` (for R2).
   - `Host.listening` (boolean) and `Host.recording` (the recording in progress for you, or `null`).
-  - `Recording.chapters` (`{ startSec, title }[]`, for step 4).
+  - `Recording.status` (`recording`, `processing`, `ready`, `failed`, `expired`) and `Recording.chapters` (`{ startSec, title }[]`, for step 4) with `chaptersStatus` (`pending`, `ready`, `failed`, for R32).
   - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health).
   - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself (`fe-arch.md`).
   - `Recording.removedAt` and `deletesAt` (for the recycle bin).
@@ -176,14 +182,15 @@ Add `"test": "vitest"` to the `package.json` scripts.
 npm install hls.js
 ```
 
-- **List page:** search, platform and host filters, a "Show expired" switch (off by default), the result count from `total`, and a card grid with "Load more" (`useInfiniteQuery`). Each card has a thumbnail with platform tag and duration, title, host · date, size, and one retention line. Expired cards are dimmed and say why they can't be played. **Remove** moves a recording to the recycle bin with an Undo toast.
+- **List page:** search, platform and host filters (the host as a removable chip), a "Show expired" switch (off by default), sort by newest or longest, all in the URL; the result count from `total`, and a card grid with "Load more" (`useInfiniteQuery`). Each card has a thumbnail with platform tag and duration, title, host · date, size, and one retention line. Expired cards are dimmed and say why they can't be played. **Remove** moves a recording to the recycle bin with an Undo toast.
 - **Recycle bin** (`/recordings/recycle-bin`): removed recordings with Restore and the day each is deleted for good. There's no "delete forever" button.
+- **Recordings that aren't there:** a removed, expired, deleted, or unknown recording at `/recordings/:id` opens a page that says what happened, when, and what you can do.
 - **Detail page:** two columns on desktop, stacked on mobile.
   - Left: header (Back, platform, title, host, date), then a `<video>` player that fits portrait and landscape video without empty space. Use hls.js when `Hls.isSupported()`, else native HLS; destroy the hls.js instance when the page unmounts.
   - Under the player, a timeline marks the recorded spans, the gaps from `Recording.gaps` (hovering one says why it happened), the chapters, and the playhead. When there are gaps, the list card says "96% captured".
   - Select sections on the timeline by dragging, by start/end at the playhead, or by chapter. Edges snap to segments (about 6 s). Each section downloads through `getSectionDownloadUrl`.
   - **Download** of the whole recording is a plain link to `Recording.downloadUrl` that starts at once. There's no export step to wait for.
-  - Right: a chapter list. Clicking a chapter sets `video.currentTime`; the current chapter is highlighted as the video plays. Metadata goes below it.
+  - Right: a chapter list. Clicking a chapter sets `video.currentTime`; the current chapter is highlighted as the video plays. While `chaptersStatus` isn't `ready`, the list says so. Metadata goes below it.
 
 For a test video, any public `.m3u8` sample stream with CORS enabled works.
 

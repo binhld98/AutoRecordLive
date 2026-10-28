@@ -209,7 +209,7 @@ No toast after a download (the browser shows it), Mark all read or a settings sw
 
 ### Statuses
 
-Statuses are defined with their screens: host states in the hosts user flows, and recording card states in flows 3, 5, and 6 of the user flows. App-wide:
+Statuses are defined with their screens: host states in the hosts user flows, and recording states in the recordings user flows. App-wide:
 
 | ID | When | Status | Where |
 | --- | --- | --- | --- |
