@@ -2,7 +2,7 @@
 
 This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
-- What the reference app does, and its known issues (R1–R38): [reference app study](./ref-app-study.md)
+- What the reference app does, and its known issues (R1–R42): [reference app study](./ref-app-study.md)
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
 - How people move through the app: [user flows and sitemap](./user-flows.md)
 - How hosts are followed, listened to, and recorded: [hosts user flows](./user-flows-hosts.md)
@@ -51,7 +51,7 @@ How we fix each known issue from the reference app study, and the step where it 
 | R21 Room title used as the streamer's name | Notifications and previews name the host (display name and `@username`) and show the room title separately | 3, 6 |
 | R22 Misleading "listening enabled" | Each preview row says what Add will do: "Will listen and record when live", "Will be saved, not listening: all 5 listeners in use", or "Already in your hosts" | 3 |
 | R23 Recordings filter by platform only | Search, platform and host filters (step 4). The host filter shows as a removable chip, and host cards link to it. Sort by newest or longest | 4 |
-| R24 Abandoned checkout stuck on "Pending" | Unpaid checkouts expire and show as "Canceled" | Later |
+| R24 Abandoned checkout stuck on "Pending" | Unpaid checkouts expire and show as "Canceled". Each payment names what was bought ("Pay as you go · 10 hours") and links its receipt | Later |
 | R25 Session replay without consent | No session replay. If we add analytics, use a cookie-free tool that needs no consent prompt | Later |
 | R26 Invisible listener limit | Rows past the limit say "Will be saved, not listening: all 5 listeners in use" before Add. Resume listening when all are in use is disabled with "Stop listening to another host to free one". `/hosts`, the Overview, and `/account` say "3 of 5 listeners in use". The API answers `409` with a code, never `500` | 3, 5, BE |
 | R27 Add Streamer's check misfires | One check per pasted line, of any length, batched into one request. A line that couldn't be checked says so with Retry; an unknown username says "Not found" | 3, BE |
@@ -67,10 +67,14 @@ How we fix each known issue from the reference app study, and the step where it 
 | R36 Inbox hard to use | `/notifications` with an Unread filter and Mark all read, a sidebar badge, and a list that updates by itself. No bell panel | 6 |
 | R37 Pop-up shows one and isn't announced | No pop-ups: a new notification updates the badge and the item in place. The badge's label includes the count. Browser push is opt-in | 6, P3 |
 | R38 Email-only, account-wide settings | In the app and Email switches per event, with live alerts per host. Problems always show in the app | 6, BE |
+| R39 Billing status contradicts itself | `/account` says the plan once, in a sentence with its date: "Trial ended Oct 22", "Starter · renews Nov 28", "Starter · ends Nov 28, auto-renew is off". A one-time pack never says it renews | 7, Later |
+| R40 Cancel is easy and can't be undone | Cancelling asks once, says the end date and what stops after it, and can be undone until then | Later |
+| R41 No billing self-service | The payment provider's hosted billing page (Stripe's customer portal) handles cards, invoices, cancel and resume, and plan changes | Later |
+| R42 Raw "Network Error", whole page lost | Errors use our own words and cover only the part that failed, with Retry. `/account` still shows the plan and usage when billing can't load | 7 |
 
 ## Where we go further
 
-Fixing R1–R38 gets us level with the reference. These upgrades put us ahead. Each one answers something the study found: a weak spot, or an asset the reference has but barely uses.
+Fixing R1–R42 gets us level with the reference. These upgrades put us ahead. Each one answers something the study found: a weak spot, or an asset the reference has but barely uses.
 
 | Upgrade | What it is | Answers | Step |
 | --- | --- | --- | --- |
@@ -258,6 +262,6 @@ The upgrades marked P3 in [Where we go further](#where-we-go-further). Each need
 
 ## Later
 
-Plans (hours, listeners, retention), billing (Stripe) with resume after upgrade, more platforms (YouTube, Twitch), a Chinese UI for Douyin users, and an admin console.
+Plans (hours, listeners, retention), billing (Stripe, with its hosted customer portal for cards, invoices, cancelling, and plan changes) with resume after upgrade, more platforms (YouTube, Twitch), a Chinese UI for Douyin users, and an admin console.
 
 The reference product limits itself to streams you own or have permission to record. Keep the same rule in our terms of use, and check each platform's terms before adding it.
