@@ -5,6 +5,7 @@ AutoRecordLive is modeled on https://app.autorecordlive.com. This document is th
 Deep studies of single screens:
 
 - [Streamers dashboard](./ref-app-dashboard.md): the streamer list, Add Streamer, live status, and the active listener limit (studied 2026-10-26).
+- [Notifications](./ref-app-notifications.md): the inbox, the header bell and its pop-up, read state, links, email settings, toasts, and every notification type (studied 2026-10-28).
 
 The overview was last studied on 2026-10-24 on a Free Trial account (trial ended 2026-10-22) with one followed streamer. Methods: using the app at desktop and phone widths, reading its JavaScript bundle, and calling its API with read-only requests.
 
@@ -43,7 +44,7 @@ Every signed-in page shares one shell:
 | `/recordings` | Recordings | Platform filter, result count, grid of recording cards. Takes a hidden `?channel_id=` filter |
 | `/recordings/:platform/:recordingId` | Recording detail | Header card, player, Refresh / Download / Replay, a side column, AI sections, related recordings |
 | `/recordings/export-download` | Export download | Turns `task_id`, `platform`, and `token` query params into an API download link and opens it |
-| `/notifications` | Notifications | Unread count, Refresh, list of notifications with "Load more" |
+| `/notifications` | Notifications | Unread count, Refresh, list of notifications with "Load more". See the notifications study |
 | `/settings/subscription`, `/settings/subscription/history` | Subscription | Tabs: Subscription settings / Payment history. `/subscription` and `/subscription/history` redirect here |
 | `/upgrade`, `/payment/success` | Checkout | Plan picker and the page Stripe/PayPal return to |
 | `/admin/*` | Operator console | Recording repair, metadata repair, export recovery, retention, publication, AI content, impersonation, trial anti-abuse, system notice. Internal only |
@@ -55,9 +56,7 @@ Every signed-in page shares one shell:
 
 **Recording detail:** the player sits centered under a header card (Back, platform, access and retention badges, title, streamer, date). Portrait video gets a 9:16 box, and landscape a 16:9 one. A "Preview only" badge sits on the video, and playback stops at 300 seconds. A right-hand column holds Retention, the metadata grid (streamer, channel, category, duration, file size, recording ID, status, format), the access state ("Preview only", the preview limit, "Upgrade required"), and an Overview card with the current playback time. Below the player come the summary, a session outline, highlights, and FAQ (questions only, collapsed), then related recordings. Clicking an outline chapter or highlight seeks the video and adds `?t=<seconds>` to the URL; the current chapter is marked. Expired recordings replace the player with an amber "This recording has expired" card, and deleted ones show "This recording was deleted". Any signed-in user can open any public recording by its URL, not just recordings of streamers they follow.
 
-**Notification row:** a status icon, title, message, and time. The row is tinted by level: green for success ("Recording complete", "Monitoring started"), amber for warnings ("Monitoring auto-stopped"), and blue for info ("Monitoring stopped"). Clicking a row follows its `action_url`. The UI builds the title and message from `notification_type` and `metadata` in the current language, because the API's `title` stays in the language the account had when the notification was created.
-
-**Email notification settings:** a popover from the header with four account-wide checkboxes: Recording completed (on by default), Recording started, Recording failed, Download usage warning. There are no per-streamer settings.
+**Notification row, header bell, pop-up, and email settings:** see the notifications study.
 
 **Subscription settings:** Current plan and Billing status cards, then Subscription details (plan, paid subscription, status, access until) with an **Upgrade plan** button. **Payment history** lists transactions as cards (plan, status badge, amount, gateway, created at), with Previous/Next paging.
 
@@ -256,3 +255,9 @@ Problems seen while using the app. The roadmap says how we fix each one.
 | R26 | The listener limit is invisible. Past it, Add Streamer saves the streamer as stopped and only says "Streamer saved, but listening has not started yet."; the server's reason (`active_listener_limit_exceeded`) is never shown. Resume answers HTTP 500 and opens an upgrade prompt that doesn't suggest stopping another streamer. No screen says how many listeners are in use, and the list can't be sorted, so the one listening streamer can sit on page 2 | Streamers, Add Streamer |
 | R27 | Add Streamer's check misfires. Usernames under 5 characters (`@nba`) aren't checked until the field loses focus, each typed username is checked twice, checks run in parallel get `429` shown as "Recording resources are busy", and an unknown username says "This account has not enabled live streaming." | Add Streamer modal |
 | R28 | Recording starts late. When listening starts on a streamer that is already live (the preview said "Live now"), recording starts about 100 s later (100 s and 97 s in two tries), so that part of the stream is lost | Listener |
+| R33 | Your own clicks fill the inbox: 20 of our 24 notifications came from our own actions, a "Streamer added" for each of 15 streamers (also those that never started listening) plus "Monitoring started" and "Monitoring stopped". Each action also showed a toast, and its notification popped up again up to a minute later | Notifications |
+| R34 | What matters never arrives. No notification says a streamer went live, that listening couldn't start, or that recording time is running out (the download warning is email-only). The first sign is "Monitoring auto-stopped", after the fact | Notifications |
+| R35 | Notification links lead nowhere useful. "Streamer added" and "Monitoring started/stopped" open the whole streamer list. "Monitoring auto-stopped" opens an upgrade page that offers to restart "this channel" without knowing which one. "Export ready" never says the file is kept only 36 hours | Notifications |
+| R36 | The inbox is hard to use. Mark all read is only in the header bell's panel, which shows 8 and doesn't link to the inbox. There's no filter (though the API takes `status=unread`), delete, or mark unread. The bell polls every 60 s and the inbox doesn't, so the badge counts notifications the page doesn't list | `/notifications`, Header |
+| R37 | The pop-up for new notifications shows only the newest of several (the rest never pop up), stays until closed or you change pages, shares its corner with toasts, and has no `aria-live`, so screen readers miss it. The bell's label leaves out the unread count | Header |
+| R38 | Notification settings are four account-wide email checkboxes: nothing for in-app, nothing per streamer. The subscribe response carries per-streamer flags and Add Streamer ships unused "Notify via Email / Push Notification" strings, but no screen uses them. Escape doesn't close the popover | Header |
