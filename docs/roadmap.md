@@ -6,7 +6,7 @@ This is the plan for getting from today's Hello World SPA to an AutoRecordLive t
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
 - How people move through the app: [user flows and sitemap](./user-flows.md)
 - How hosts are followed, listened to, and recorded: [hosts user flows](./user-flows-hosts.md)
-- How recordings are watched, downloaded, removed, and expire: [recordings user flows](./user-flows-recordings.md)
+- How recordings are watched, downloaded, and expire: [recordings user flows](./user-flows-recordings.md)
 - When the app uses a notification, a toast, or another message, and what each one says: [notifications user flows](./user-flows-notifications.md)
 
 ## Product principles
@@ -33,7 +33,7 @@ How we fix each known issue from the reference app study, and the step where it 
 | R3 Truncated cards | Responsive grid that fills the width, plus a table view for many hosts | 3 |
 | R4 Cryptic icons | Text labels, or tooltips with `aria-label`s | 3 |
 | R5 Confusing usage numbers | Plain sentences on the Overview and `/account`: "Used 12h of 50h · resets Nov 1" and "3 of 5 listeners in use", with "no time left" and "trial ended" states | 5, 7 |
-| R6 Duplicate expiry warnings, dead cards | One retention line. Expired cards are dimmed, say why they can't play, and are hidden by default behind a filter | 4 |
+| R6 Duplicate expiry warnings, dead cards | One retention line. Recordings leave the list when retention ends; expired links explain why they can't play | 4 |
 | R7 Refresh buttons, uneven updates | No Refresh buttons and no polling. Lists refetch when the tab regains focus and update at once after the user's own actions (step 2); Server-Sent Events push changes while you watch once the back end exists. Statuses show how old they are, and a failed update shows "Couldn't update · Retry" | 2, BE |
 | R8 Platform picker; one host at a time | Paste anything with auto-detect and a preview before saving; batch import | 3 |
 | R9 Duplicate nav, no search | Header holds a ⌘K search for hosts and recordings instead of repeated links | 1, 6 |
@@ -42,8 +42,8 @@ How we fix each known issue from the reference app study, and the step where it 
 | R12 Mixed pagination and field names | One cursor style for every paged list; the API sends `camelCase` | 2, BE |
 | R13 Tokens readable by scripts | Access token in memory only; refresh token in an `httpOnly` cookie on the same origin | 7, BE |
 | R14 Recordings public by default | Recordings are private to the users who follow the host. No public pages; the recordings API only returns the caller's | BE |
-| R15 Expiry only cosmetic | When retention ends, the API stops serving the playlist, segments, AI content, and transcript, and the files are deleted | BE |
-| R16 Recordings vanish without warning | A notification before a recording expires. A link to a deleted recording opens a page that says when and why it was deleted | 4, 6, BE |
+| R15 Expiry only cosmetic | When a user's retention ends, the API stops serving them the playlist, segments, AI content, and transcript; shared files are deleted when no follower still needs them | BE |
+| R16 Recordings vanish without warning | A notification before a recording expires. A link to an expired recording opens a page that says when and why it expired | 4, 6, BE |
 | R17 Filters list platforms we can't add | One list of supported platforms feeds both the URL parser and the platform filters | 3, 4 |
 | R18 Fragile playback, blocked captions | Signed segment URLs last the recording's length plus a margin. Subtitles come from `/api` on our origin. On an error, the player reloads the playlist and resumes at the same time before showing a message | 4, BE |
 | R19 No password reset or account controls | Forgot and reset password pages. `/account` adds sign-in methods, change password, and delete account | 7, BE |
@@ -84,7 +84,6 @@ Fixing R1–R42 gets us level with the reference. These upgrades put us ahead. E
 | Live alerts | A "host went live" notification with a link to the live stream, with per-host settings for in-app, email, Telegram, Discord webhook, and browser push | Only account-wide email settings, and no live alert (R34, R38) | 6, P3 |
 | Watch while recording | Play a recording while it's still in progress; the uploader keeps the HLS playlist growing as segments arrive | You wait for the stream to end | P3 |
 | Section downloads | On the recording page, select one or more sections on the timeline and download each as its own `.mp4`. With short (about 6 s) segments, a section is a slice of the segment list | Whole-file exports cut short by the quota; 60 s segments (R29) | 4, BE |
-| Recycle bin | Removing a recording moves it to a recycle bin, where it can be restored for 30 days. Each one shows the day it's deleted for good | — | 4, BE |
 | Share links | Share one recording or section through an unlisted link that expires and can be revoked | Everything public by default (R14) | P3 |
 | Find the moment | ⌘K searches the transcripts of all your recordings. Each result shows the spoken line and opens the player at that second | Transcripts that are generated but only used as (blocked) captions | P3 |
 | Keep your recordings | Copy each finished recording to the user's own storage (Google Drive, Dropbox, or an S3 bucket), so it outlives the plan's retention | Recordings deleted after 3–90 days, sometimes silently (R16) | P3 |
@@ -100,7 +99,7 @@ Our routes from `fe-arch.md`, next to the reference app's:
 | --- | --- |
 | `/` overview | `/` (streamer list only) |
 | `/hosts` | Streamer list + Add Streamer modal |
-| `/recordings`, `/recordings/recycle-bin`, `/recordings/:id` | `/recordings`, `/recordings/:platform/:recordingId` |
+| `/recordings`, `/recordings/:id` | `/recordings`, `/recordings/:platform/:recordingId` |
 | `/notifications` | `/notifications` |
 | `/account` | `/settings/subscription` |
 
@@ -141,12 +140,11 @@ npm install @tanstack/react-query
   - `Recording.status` (`recording`, `processing`, `ready`, `failed`, `expired`) and `Recording.chapters` (`{ startSec, title }[]`, for step 4) with `chaptersStatus` (`pending`, `ready`, `failed`, for R32).
   - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health).
   - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself (`fe-arch.md`).
-  - `Recording.removedAt` and `deletesAt` (for the recycle bin).
   - `Quota`: recording hours used and allowed with `resetsAt`, listeners used and allowed, and `runsOutAt`: when recording time runs out at the current pace, or `null` (for the usage forecast). No download quota.
   - `Notification.type`: an ID from the message catalog, with `values` for its text and a `link`, instead of finished sentences.
 - `src/lib/api.ts`, the fake API:
   - Hosts: `listHosts()` (the whole list), `inspectUrls(urls)`, `addHosts(urls)`, `startListening(id)`, `stopListening(id)`, `removeHost(id)`.
-  - Recordings: `listRecordings(filters, cursor?)`, `getRecording(id)`, `getSectionDownloadUrl(id, startSec, endSec)`, `removeRecording(id)`, `restoreRecording(id)`, `listRemovedRecordings(cursor?)`.
+  - Recordings: `listRecordings(filters, cursor?)`, `getRecording(id)`, `getSectionDownloadUrl(id, startSec, endSec)`.
   - Notifications: `listNotifications({ unreadOnly }, cursor?)`, `getUnreadCount()`, `markRead(id)`, `markAllRead()`, `getNotificationSettings()`, `updateNotificationSettings(settings)`.
   - Other: `getQuota()`, `getOverview(since)`.
   - Paged lists return `{ items, nextCursor, total }`.
@@ -186,9 +184,8 @@ Add `"test": "vitest"` to the `package.json` scripts.
 npm install hls.js
 ```
 
-- **List page:** search, platform and host filters (the host as a removable chip), a "Show expired" switch (off by default), sort by newest or longest, all in the URL; the result count from `total`, and a card grid with "Load more" (`useInfiniteQuery`). Each card has a thumbnail with platform tag and duration, title, host · date, size, and one retention line. Expired cards are dimmed and say why they can't be played. **Remove** moves a recording to the recycle bin with an Undo toast.
-- **Recycle bin** (`/recordings/recycle-bin`): removed recordings with Restore and the day each is deleted for good. There's no "delete forever" button.
-- **Recordings that aren't there:** a removed, expired, deleted, or unknown recording at `/recordings/:id` opens a page that says what happened, when, and what you can do.
+- **List page:** search, platform and host filters (the host as a removable chip), sort by newest or longest, all in the URL; the result count from `total`, and a card grid with "Load more" (`useInfiniteQuery`). Each card has a thumbnail with platform tag and duration, title, host · date, size, and one retention line. Recordings automatically leave the list when retention ends.
+- **Recordings that aren't there:** an expired or unknown recording at `/recordings/:id` opens a page that says what happened, when, and what you can do.
 - **Detail page:** two columns on desktop, stacked on mobile.
   - Left: header (Back, platform, title, host, date), then a `<video>` player that fits portrait and landscape video without empty space. Use hls.js when `Hls.isSupported()`, else native HLS; destroy the hls.js instance when the page unmounts.
   - Under the player, a timeline marks the recorded spans, the gaps from `Recording.gaps` (hovering one says why it happened), the chapters, and the playhead. When there are gaps, the list card says "96% captured".
@@ -245,7 +242,7 @@ Build order:
 3. Monitor for one platform.
 4. Recorder and uploader for one platform.
 5. Recordings API and signed playlists.
-6. Downloads, usage warnings, notifications (in-app and email), and deletion: files go when retention ends, or 30 days after a recording is removed.
+6. Downloads, usage warnings, notifications (in-app and email), and deletion: recordings leave each user's list when their retention ends, and shared files go when no follower still needs them.
 7. AI content: transcribe each recording and generate its summary and chapters. The reference already has summaries, outlines, highlights, FAQs, and transcripts; step 4 builds the chapter UI with fake data.
 8. Real-time: `POST /api/realtime/ticket` and `GET /api/events` (SSE with heartbeats; the proxy must not buffer it). Tickets are single-use, so the client reconnects with a fresh ticket instead of relying on `EventSource`'s auto-reconnect. Front end: open the stream after sign-in and turn each event into a TanStack Query cache update or invalidation (host status, recording, unread count). While the stream is down, show a quiet "Reconnecting…", and refetch everything after reconnecting, since events may have been missed.
 

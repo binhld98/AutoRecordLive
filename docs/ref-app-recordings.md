@@ -166,8 +166,7 @@ Our answers are in the recordings user flows. The ones this study tests:
 - **Download starts at once** as a plain link to `Recording.downloadUrl`, whole or by section. No export job, no notification to wait for, no link that expires in 36 hours (R30).
 - **Short segments.** About 6 s fragmented MP4 instead of 60 s MPEG-TS, so playback starts and seeks in a second or two and a section is a slice of the segment list (R29).
 - **Segment links last the recording's length plus a margin**, not 24 minutes (R18).
-- **Remove and restore.** The reference has no way to remove a recording; ours moves it to a recycle bin with Undo.
 - **Filters you can see.** Platform, host, and search, with the host filter as a removable chip, and host cards whose count matches the list (R23).
 - **One access state, said once.** We have no preview limit; when a plan does lock something, the card and detail page say the same thing, and only when it actually limits the recording (R31).
 - **Say when something is missing.** If chapters or a transcript aren't ready or failed, the page says so instead of leaving a blank (R32).
-- **A link that can't open says why.** Removed, expired, and deleted recordings each get their own page; an unknown ID gets "Recording not found" with a way back, not a Retry (R16).
+- **A link that can't open says why.** An expired recording gets its own page; an unknown ID gets "Recording not found" with a way back, not a Retry (R16).

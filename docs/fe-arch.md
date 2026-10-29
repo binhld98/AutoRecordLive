@@ -48,8 +48,7 @@ Use a public authentication layout and a separate authenticated application shel
 | `/verify-email` | Signed in, unverified | Verify the email before using the app |
 | `/` | Authenticated | Overview of followed hosts, current live/recording activity, recent recordings, items that need attention, and plan usage with its forecast |
 | `/hosts` | Authenticated | Add (one or many at once), view, and remove followed hosts or channels; start or stop listening to each host (a listening host records every broadcast) |
-| `/recordings` | Authenticated | Search, filter, and review recordings, see their status and retention, and remove them |
-| `/recordings/recycle-bin` | Authenticated | Restore removed recordings before they're deleted for good |
+| `/recordings` | Authenticated | Search, filter, and review recordings, and see their status and retention |
 | `/recordings/:id` | Authenticated | Play a recording, jump between its chapters, see where it has gaps, view its metadata, and download it whole or in sections |
 | `/notifications` | Authenticated | Read notifications, mark them read, and choose which events reach you in the app and by email, including live alerts per host |
 | `/account` | Authenticated | Profile, sign-in methods, password change, account deletion, plan and usage, subscription, and billing details |
