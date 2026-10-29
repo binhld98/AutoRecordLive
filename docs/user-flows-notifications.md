@@ -19,7 +19,7 @@ Flow numbers (11, 12, 13) continue those in the other user flows.
 ```mermaid
 flowchart TD
   start(["Something to tell the user"]) --> who{"Did they just do it, in this tab?"}
-  who -- "yes, and it worked" --> toast["Toast, with Undo when it can be undone"]
+  who -- "yes, and it worked" --> toast["Toast"]
   who -- "yes, and it failed" --> where{"In a dialog or form?"}
   where -- yes --> inline["Inline message next to the cause;<br/>the dialog stays open"]
   where -- "no, one click on a card or row" --> errtoast["Error toast with Retry"]
@@ -30,7 +30,7 @@ flowchart TD
 
 1. **The same event never gets both a toast and a notification.** Adding a host gives a toast and no notification (the reference sends both, R33).
 2. **Whatever stays true afterwards is also a status on the item**, so a toast or a notification is never the only place to find it.
-3. **Ask first before an action that stops a recording or removes something, unless Undo can reverse it.** Then act at once and put Undo in the toast. Removing a recording goes to the recycle bin with Undo; removing a host asks.
+3. **Ask first before an action that stops a recording or removes something.**
 
 | Situation | Kind |
 | --- | --- |
@@ -41,7 +41,6 @@ flowchart TD
 | Resume listening while every listener is in use | Inline: the button is disabled and says why |
 | Stop listening fails because the network dropped | Error toast with Retry |
 | A pasted line isn't a host | Inline, on its row |
-| You remove a recording | Toast with Undo, no confirmation |
 | A host goes offline | Status only |
 | Recording time reaches 80% | Notification |
 
@@ -50,7 +49,7 @@ flowchart TD
 **Toasts**
 
 4. Say what happened to what: "Stopped listening to @host". A batch is one toast with a count: "Added 3 hosts".
-5. Success toasts last 4 seconds, 8 with Undo, and pause while hovered or focused. Error toasts stay until closed.
+5. Success toasts last 4 seconds and pause while hovered or focused. Error toasts stay until closed.
 6. Error toasts are only for one-click actions on a card or row. A failure in a dialog or form shows inline, and the dialog stays open.
 7. At most 3 show at once; a fourth pushes out the oldest. Bottom right on wide screens, bottom center on phones. Screen readers announce them.
 
@@ -59,7 +58,7 @@ flowchart TD
 8. The server creates one per event for each person it concerns, of the types in the catalog. Each has a type, a level, a time, the host or recording it's about, and a link.
 9. The browser builds the text from the type and its values, in the language you're reading in. The API sends no sentences, so no notification stays in the language the account had when it was sent.
 10. Hosts are named by display name and @username, never by stream title (R21).
-11. Every notification opens the thing it's about. When that thing is gone, the link opens the page that says what happened (flows 5 and 6), never a dead end (R16, R35).
+11. Every notification opens the thing it's about. When that thing is gone, the link opens the page that says what happened (flow 6), never a dead end (R16, R35).
 12. A new notification raises the unread badge and updates the item in place. It never pops up over the page; browser push, in phase 3, is the opt-in way to be interrupted (R37).
 13. Opening a notification marks it read, and so does following its email's button. Mark all read marks the rest. Visiting the page marks nothing, and there's no delete.
 14. Problems always show in the app: a failed recording, one about to expire, usage warnings, a listener limit drop, and a host we can't reach (P8). You choose which go by email, and whether live alerts and ready recordings show at all.
@@ -125,7 +124,7 @@ flowchart TD
   target --> rec["/recordings/:id"]
   target --> hosts["/hosts, filtered to the hosts it names"]
   target --> account["/account: plan and usage"]
-  rec -- "removed, expired, or deleted" --> gone["A page that says what happened and what you can do (flows 5 and 6)"]
+  rec -- expired --> gone["A page that says what happened and what you can do (flow 6)"]
   page --> markall["Mark all read: the badge clears"]
   page --> settings["Settings (flow 13)"]
 ```
@@ -168,8 +167,6 @@ Every core message, by kind. The ID names the message in code, and a notificatio
 | `host.listening` | Resume listening | "Listening to @host" | — |
 | `host.stopped` | Stop listening | "Stopped listening to @host". If it was recording: "Stopped listening to @host, 42 min kept" | — |
 | `host.removed` | Remove a host, after confirming | "Removed @host" | — |
-| `recording.removed` | Remove a recording | "Moved to recycle bin" | Undo |
-| `recording.restored` | Restore, or Undo | "Restored to Recordings" | — |
 | `account.saved` | Save on `/account` | "Saved" | — |
 | `auth.emailSent` | Resend on `/verify-email` | "Sent. Check your inbox." | — |
 | `action.failed` | A one-click action fails | "Couldn't stop listening to @host.", with the reason when we know it | Retry |
@@ -196,7 +193,6 @@ No toast after a download (the browser shows it), Mark all read or a settings sw
 | `addHosts.unsupported` | Add hosts row, a link from another site | "Only TikTok and Douyin links work for now" |
 | `addHosts.checkFailed` | Add hosts row, the platform didn't answer | "Couldn't check right now", with Retry |
 | `host.resumeBlocked` | Tooltip on a disabled Resume listening | "All 5 listeners in use. Stop listening to another host to free one." |
-| `recording.removeBlocked` | Tooltip on a disabled Remove | "Still recording. You can remove it when the recording ends." |
 | `page.loadFailed` | A page whose data didn't load | "Couldn't load your hosts", with Retry |
 | `settings.saveFailed` | Beside a settings switch that didn't save | "Couldn't save. Try again." |
 | `player.failed` | The player, after its automatic retry | "This recording won't play right now", with Retry and Download |

@@ -6,7 +6,7 @@ How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1
 
 **Hosts and listeners:** see the [hosts user flows](./user-flows-hosts.md): listening, active listeners, live checks, recording, and removing hosts.
 
-**Recordings:** see the [recordings user flows](./user-flows-recordings.md): watching, section downloads, the recycle bin, and retention.
+**Recordings:** see the [recordings user flows](./user-flows-recordings.md): watching, section downloads, and retention.
 
 **Limits and usage**
 
@@ -35,7 +35,6 @@ flowchart TD
     hosts["/hosts"]
     add(["Add hosts dialog"])
     recs["/recordings"]
-    bin["/recordings/recycle-bin"]
     rec["/recordings/:id player and editor"]
     notifs["/notifications"]
     nsettings(["Notification settings dialog"])
@@ -51,8 +50,6 @@ flowchart TD
   hosts --> add
   hosts -- "N recordings, filtered to the host" --> recs
   recs --> rec
-  recs --> bin
-  bin -- "Restore" --> recs
   notifs --> nsettings
   notifs -- "notification link" --> rec & hosts & account
 ```
@@ -62,7 +59,7 @@ flowchart TD
 
 ## Flows
 
-Flows 1 (Follow a host), 2 (A host goes live and gets recorded), and 4 (Manage a host) are in the hosts user flows. Flows 3 (Watch, cut, or download a recording), 5 (Remove and restore a recording), and 6 (A recording expires) are in the recordings user flows.
+Flows 1 (Follow a host), 2 (A host goes live and gets recorded), and 4 (Manage a host) are in the hosts user flows. Flows 3 (Watch, cut, or download a recording) and 6 (A recording expires) are in the recordings user flows.
 
 ### 7. Recording time runs out
 
@@ -80,7 +77,7 @@ Flows 8 (Sign up and verify), 9 (Sign in), and 10 (Reset password) are in the ac
 
 ## Principles check
 
-Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, 3, 5, and 6 in the recordings user flows, 8, 9, and 10 in the account user flows, and 11, 12, and 13 in the notifications user flows.
+Each flow against **P4 no dead ends** and **P8 nothing disappears silently**, plus any other principle it leans on. Flows 1, 2, and 4 are checked in the hosts user flows, 3 and 6 in the recordings user flows, 8, 9, and 10 in the account user flows, and 11, 12, and 13 in the notifications user flows.
 
 | Flow | No dead ends (P4) | Nothing disappears silently (P8) | Other |
 | --- | --- | --- | --- |
