@@ -31,4 +31,4 @@ The development server runs at http://localhost:8484. See the [app README](fe/ap
 
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for the development workflow and commit message conventions. Work is tracked on the [Trello board](https://trello.com/b/HnPxSCJz/main).
+See [AGENTS.md](AGENTS.md) for the development workflow and commit message conventions. It also lists the Trello boards where work is tracked.
