@@ -21,15 +21,10 @@ npm install
 npm run dev
 ```
 
-The development server runs at http://localhost:8484. See the [user app README](user-app/README.md) for more scripts.
+The development server runs at <http://localhost:8484>.
 
 ## Documentation
 
-- [User app architecture overview](docs/arch.md)
-- [User app init guide](docs/guide/init-guide.md)
-- [User app roadmap](docs/roadmap.md)
-- [Reference app study](docs/study/ref-app-study.md)
-
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for the development workflow and commit message conventions. It also lists the Trello boards where work is tracked.
+See [AGENTS.md](AGENTS.md) for the task tracking, development workflow and commit message conventions.

@@ -15,16 +15,6 @@ This repository holds only the user app. The back end, admin console, and landin
 - `user-app/` — the user app, where users follow hosts and watch and download recordings.
 - `docs/` — product, architecture, and development documentation.
 
-## Development Workflow
-
-- `main` is the only long-lived branch and must stay releasable.
-- Do each piece of work in its own `<type>/<slug>` branch from `main`, such as `feat/follow-channel`.
-- When the user approves the work, commit it, push the branch, and open a PR into `main`.
-- Never merge the PR yourself. The user squash merges and deletes the remote branch on GitHub.
-- When the user confirms the PR is done, switch to `main`, pull it, and delete the local branch.
-- Release by tagging `main` with a version (e.g. `v0.3.0`) only when the user asks.
-- Hotfix an old release: fix on `main`, cherry-pick into a release branch from its tag (e.g. `release/v0.3.x`), and tag the next patch (e.g. `v0.3.1`).
-
 ## Task Tracking
 
 Work is tracked on Trello, with one board per sprint.
@@ -38,7 +28,17 @@ Rules for every board:
 - **Lists:** Backlog → Queued → In Progress → In Review → Closed.
 - **Titles:** `<sprint>-<n>: <short description>`, such as `S0-4: Write product vision`. Number cards in order on each board; never reuse or renumber one.
 - **Labels:** one per card, matching the [commit type](#commit-messages) of its work, such as `feat` or `docs`.
-- **Flow:** one card is one branch and one PR. Move the card to In Progress when its branch is created, to In Review when its PR is opened, and to Closed when the user confirms the PR is merged.
+- **Access:** can read cards to gather context, but never create, move, or edit cards on your own.
+
+## Development Workflow
+
+- `main` is the only long-lived branch and must stay releasable.
+- Do each piece of work in its own `<type>/<slug>` branch from `main`, such as `feat/follow-channel`.
+- When the user approves the work, commit it, push the branch, and open a PR into `main`.
+- Never merge the PR yourself. The user squash merges and deletes the remote branch on GitHub.
+- When the user confirms the PR is done, switch to `main`, pull it, and delete the local branch.
+- Release by tagging `main` with a version (e.g. `v0.3.0`) only when the user asks.
+- Hotfix an old release: fix on `main`, cherry-pick into a release branch from its tag (e.g. `release/v0.3.x`), and tag the next patch (e.g. `v0.3.1`).
 
 ## Commit Messages
 
