@@ -10,8 +10,9 @@ Build an application that lets users:
 
 ## Repository Structure
 
-- `fe/` — front-end application and user-facing experience.
-- `be/` — back-end services, live-status monitoring, recording orchestration, and related APIs.
+This repository holds only the user app. The back end, admin console, and landing pages are out of scope.
+
+- `user-app/` — the user app, where users follow hosts and watch and download recordings.
 - `docs/` — product, architecture, and development documentation.
 
 ## Development Workflow

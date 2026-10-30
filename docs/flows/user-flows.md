@@ -1,6 +1,6 @@
 # User flows and sitemap
 
-How people move through AutoRecordLive, agreed before any screen is drawn. Every screen design draws from these flows. Routes come from [`fe-arch.md`](../fe-arch.md); the principles (P1–P8) are the [product principles](../roadmap.md).
+How people move through AutoRecordLive, agreed before any screen is drawn. Every screen design draws from these flows. Routes come from [`arch.md`](../arch.md); the principles (P1–P8) are the [product principles](../roadmap.md).
 
 ## Decisions
 

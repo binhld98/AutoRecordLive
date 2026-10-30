@@ -1,10 +1,10 @@
-# Core SPA Front-End Architecture Overview
+# Architecture Overview
 
 ## Purpose
 
-This document guides the design and development of AutoRecordLive's core web application in `fe/app/`. It covers the pages users use to sign in, manage followed hosts and channels, review recordings, manage notifications, and view their account and plan information.
+This document guides the design and development of AutoRecordLive's user app in `user-app/`. It covers the pages users use to sign in, manage followed hosts and channels, review recordings, manage notifications, and view their account and plan information.
 
-Marketing and advertising landing pages live in `fe/ads/`. They are separate from the core app and outside this document's scope. The core app relies on the back end for authentication, live-status monitoring, recording operations, and billing.
+The admin console and landing pages are built outside this repository. The app relies on the back end for authentication, live-status monitoring, recording operations, and billing.
 
 ## Selected stack
 

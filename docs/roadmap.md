@@ -3,7 +3,7 @@
 This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
 - What the reference app does, and its known issues (R1–R42): [reference app study](./study/ref-app-study.md)
-- Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
+- Stack, routes, and technical decisions: [user app architecture overview](./arch.md)
 - How people move through the app: [user flows and sitemap](./flows/user-flows.md)
 - How hosts are followed, listened to, and recorded: [hosts user flows](./flows/user-flows-hosts.md)
 - How recordings are watched, downloaded, and expire: [recordings user flows](./flows/user-flows-recordings.md)
@@ -93,7 +93,7 @@ Fixing R1–R42 gets us level with the reference. These upgrades put us ahead. E
 
 ## Routes
 
-Our routes from `fe-arch.md`, next to the reference app's:
+Our routes from `arch.md`, next to the reference app's:
 
 | Ours | Reference |
 | --- | --- |
@@ -105,7 +105,7 @@ Our routes from `fe-arch.md`, next to the reference app's:
 
 ## Phase 1 — Front end on fake data
 
-The back end doesn't exist yet, so build the front end against a **fake API**: one module whose functions return Promises from in-memory data, with the same names and shapes as the real endpoints will have. When the back end is ready, swap the function bodies for API client calls and leave the pages untouched. See `fe-arch.md`.
+The back end doesn't exist yet, so build the front end against a **fake API**: one module whose functions return Promises from in-memory data, with the same names and shapes as the real endpoints will have. When the back end is ready, swap the function bodies for API client calls and leave the pages untouched. See `arch.md`.
 
 Do each step in its own `feat/<slug>` branch and PR, following [AGENTS.md](../AGENTS.md). Run `npm run build`, `npm run lint`, and (from step 3) `npm test` before every PR.
 
@@ -114,7 +114,7 @@ Do each step in its own `feat/<slug>` branch and PR, following [AGENTS.md](../AG
 Goal: you can click between empty pages inside the sidebar + header layout.
 
 ```bash
-cd fe/app
+cd user-app
 npx shadcn@latest add sidebar button card badge separator dropdown-menu avatar progress tooltip command
 ```
 
@@ -139,7 +139,7 @@ npm install @tanstack/react-query
   - `Host.listening` (boolean) and `Host.recording` (the recording in progress for you, or `null`).
   - `Recording.status` (`recording`, `processing`, `ready`, `failed`, `expired`) and `Recording.chapters` (`{ startSec, title }[]`, for step 4) with `chaptersStatus` (`pending`, `ready`, `failed`, for R32).
   - `Recording.gaps` (`{ startSec, endSec, reason }[]`, for recording health).
-  - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself (`fe-arch.md`).
+  - `Recording.playlistUrl`, `subtitlesUrl`, and `downloadUrl`: signed URLs the browser loads by itself (`arch.md`).
   - `Quota`: recording hours used and allowed with `resetsAt`, listeners used and allowed, and `runsOutAt`: when recording time runs out at the current pace, or `null` (for the usage forecast). No download quota.
   - `Notification.type`: an ID from the message catalog, with `values` for its text and a `link`, instead of finished sentences.
 - `src/lib/api.ts`, the fake API:
@@ -217,48 +217,45 @@ Build the screen, settings dialog, and badge from the notifications user flows.
 ### Step 7 — Auth (`feat/auth`)
 
 - Login, register, verify email, forgot password, and reset password pages with React Hook Form + Zod, inputs with leading icons, and a show-password toggle. Login offers "Continue with Google"; register is email and password only. Login links to "Forgot password?".
-- `src/lib/api-client.ts`: the shared client from `fe-arch.md`. It keeps the access token in memory, attaches it to requests, and on a `401` refreshes once and retries. Only one refresh runs at a time.
+- `src/lib/api-client.ts`: the shared client from `arch.md`. It keeps the access token in memory, attaches it to requests, and on a `401` refreshes once and retries. Only one refresh runs at a time.
 - On app start, call `refresh()`. A `RequireAuth` wrapper on `AppLayout` shows a loading state until it finishes, then renders the page, redirects to `/login?redirect=...`, or shows `/verify-email` while the email isn't verified.
 - `/account`: profile, sign-in methods, change password, plan and usage, and delete account.
 - Until the back end exists, the fake `login()` and `refresh()` always succeed, so a page reload keeps you signed in.
 
-## Phase 2 — Back end
+## Phase 2 — Real API
 
-Start once the hosts and recordings pages work on fake data, so you know exactly what the API has to return. Write `docs/be-arch.md`, like `fe-arch.md`, first, so the language and framework choice is written down.
+The back end is built outside this repository. Start this phase once it serves what the hosts and recordings pages need, then swap each fake API function body for an API client call; the pages don't change.
 
-| Part | Job |
-| --- | --- |
-| API server | Served under `/api` on the app's origin. Auth (JWT access token + refresh cookie), hosts, recordings, notifications, SSE events. `camelCase` JSON, cursor pagination for paged lists |
-| Database | PostgreSQL. Separate `channels` (a streamer on a platform) from `subscriptions` (a user follows a channel, listening or not), so a streamer followed by many users is checked and recorded once. Plus users, recordings, recording parts, chapters, notifications |
-| Monitor worker | Checks each channel that has at least one listening subscription, at a rate the platform tolerates. Stores `lastCheckedAt` and computes `liveStatus`, which is `unknown` once a check is overdue |
-| Recorder worker | When a channel goes live, records with `ffmpeg` (or `streamlink` / `yt-dlp`) as HLS with fragmented MP4 segments of about 6 s, **to local disk**. An uploader sends each finished segment and the updated playlist to S3-compatible object storage (e.g. Backblaze B2 or Cloudflare R2). If the stream drops or the worker crashes, the next attempt continues the same recording after an `#EXT-X-DISCONTINUITY` tag and saves the gap with its reason. A new part starts only when the stream's format changes, because the download needs one init segment. When the stream ends, it writes the thumbnail, duration, and size. It records while at least one follower wants the broadcast, and each follower's recording covers their span (from when it starts recording for them until the stream ends or they stop listening). It checks each follower's hours before each segment and stops their span at the limit |
-| Playback | `GET /api/recordings/:id/playlist.m3u8` returns the playlist with every segment rewritten to a signed URL that stays valid for the recording's length plus a margin, because hls.js won't fetch a finished playlist again. The bucket's CORS allows our origin |
-| Downloads | `GET /api/recordings/:id/download.mp4` streams the init segment and then every media segment from storage as one file, rate-limited per user; there's no download quota. A section streams only its segments |
+What the front end expects from the API:
 
-Build order:
+- **Origin:** served under `/api` on the app's origin. Vite `server.proxy` in development, a reverse proxy with HTTP/2 in production.
+- **Auth:** email verification and Google sign-in. JWT access token, plus a refresh cookie `HttpOnly; Secure; SameSite=Lax; Path=/api/auth`.
+- **Shape:** `camelCase` JSON and one cursor style for every paged list.
+- **Hosts:** `liveStatus` and `lastCheckedAt` on each host, with `unknown` once a check is overdue. `POST /api/hosts/inspect` follows short links and returns a preview per URL. The listener limit answers `409` with a code.
+- **Playback:** `GET /api/recordings/:id/playlist.m3u8` returns every segment as a signed URL that stays valid for the recording's length plus a margin.
+- **Downloads:** `GET /api/recordings/:id/download.mp4` streams a whole recording or one section as one file, at once.
+- **AI content:** a transcript, summary, and chapters per recording, with `chaptersStatus`.
+- **Real-time:** `POST /api/realtime/ticket` and `GET /api/events` (SSE with heartbeats). Tickets are single-use.
 
-1. Same-origin setup: Vite `server.proxy` for `/api` in development, a reverse proxy with HTTP/2 in production.
-2. Auth with email verification and Google sign-in: refresh cookie `HttpOnly; Secure; SameSite=Lax; Path=/api/auth`, no refresh token rotation at first. Then hosts CRUD with listening and the listener limit, and `POST /api/hosts/inspect`, which follows short links and returns a preview per URL.
-3. Monitor for one platform.
-4. Recorder and uploader for one platform.
-5. Recordings API and signed playlists.
-6. Downloads, usage warnings, notifications (in-app and email), and deletion: recordings leave each user's list when their retention ends, and shared files go when no follower still needs them.
-7. AI content: transcribe each recording and generate its summary and chapters. The reference already has summaries, outlines, highlights, FAQs, and transcripts; step 4 builds the chapter UI with fake data.
-8. Real-time: `POST /api/realtime/ticket` and `GET /api/events` (SSE with heartbeats; the proxy must not buffer it). Tickets are single-use, so the client reconnects with a fresh ticket instead of relying on `EventSource`'s auto-reconnect. Front end: open the stream after sign-in and turn each event into a TanStack Query cache update or invalidation (host status, recording, unread count). While the stream is down, show a quiet "Reconnecting…", and refetch everything after reconnecting, since events may have been missed.
+Front-end work in this phase:
+
+1. Point the API client at the real endpoints, page by page, starting with auth.
+2. Open the event stream after sign-in and turn each event into a TanStack Query cache update or invalidation (host status, recording, unread count).
+3. While the stream is down, show a quiet "Reconnecting…". Reconnect with a fresh ticket instead of relying on `EventSource`'s auto-reconnect, and refetch everything afterwards, since events may have been missed.
 
 ## Phase 3 — Beyond the reference
 
-The upgrades marked P3 in [Where we go further](#where-we-go-further). Each needs the back end first. Build them in this order:
+The upgrades marked P3 in [Where we go further](#where-we-go-further). Each needs back-end support first. Build them in this order:
 
 1. Watch while recording: the playlist grows as segments arrive.
 2. Share links: a share link can point to a section.
-3. Find the moment: needs the transcripts from build order 7.
+3. Find the moment: needs the recording transcripts from the API.
 4. Live alerts beyond email: Telegram, Discord webhook, browser push.
 5. Keep your recordings.
 6. Smarter live checks, then recording rules: both change how the monitor and recorder decide what to do.
 
 ## Later
 
-Plans (hours, listeners, retention), billing (Stripe, with its hosted customer portal for cards, invoices, cancelling, and plan changes) with resume after upgrade, more platforms (YouTube, Twitch), a Chinese UI for Douyin users, and an admin console.
+Plans (hours, listeners, retention), billing (Stripe, with its hosted customer portal for cards, invoices, cancelling, and plan changes) with resume after upgrade, more platforms (YouTube, Twitch), and a Chinese UI for Douyin users. The admin console is built outside this repository.
 
 The reference product limits itself to streams you own or have permission to record. Keep the same rule in our terms of use, and check each platform's terms before adding it.
