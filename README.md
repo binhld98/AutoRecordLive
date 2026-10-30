@@ -27,7 +27,7 @@ The development server runs at http://localhost:8484. See the [app README](fe/ap
 - [Front-end architecture overview](docs/fe-arch.md)
 - [Front-end init guide](docs/fe-init-guide.md)
 - [Roadmap](docs/roadmap.md)
-- [Reference app study](docs/ref-app-study.md)
+- [Reference app study](docs/study/ref-app-study.md)
 
 ## Contributing
 

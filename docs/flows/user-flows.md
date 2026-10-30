@@ -1,6 +1,6 @@
 # User flows and sitemap
 
-How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1). Every design card (ARL-2 to ARL-14) draws its screens from these flows. Routes come from [`fe-arch.md`](./fe-arch.md); the principles (P1–P8) are the [product principles](./roadmap.md).
+How people move through AutoRecordLive, agreed before any screen is drawn (ARL-1). Every design card (ARL-2 to ARL-14) draws its screens from these flows. Routes come from [`fe-arch.md`](../fe-arch.md); the principles (P1–P8) are the [product principles](../roadmap.md).
 
 ## Decisions
 

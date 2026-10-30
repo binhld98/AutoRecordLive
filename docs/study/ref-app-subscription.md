@@ -1,6 +1,6 @@
 # Reference app: Subscription
 
-How the reference app shows a user's plan and billing: `/settings/subscription` with its two tabs, Subscription settings and Payment history, what each plan state shows, and how a subscription is cancelled. The [reference app study](./ref-app-study.md) covers the whole app at overview level, including the upgrade page and plan prices. Our plan and usage rules are in the [user flows](./user-flows.md).
+How the reference app shows a user's plan and billing: `/settings/subscription` with its two tabs, Subscription settings and Payment history, what each plan state shows, and how a subscription is cancelled. The [reference app study](./ref-app-study.md) covers the whole app at overview level, including the upgrade page and plan prices. Our plan and usage rules are in the [user flows](../flows/user-flows.md).
 
 Studied on 2026-10-28 with the Free Trial account the overview was studied on: its trial ended on 2026-10-22, and its only transaction is a Pay as you go checkout abandoned on 2026-10-17. Methods: using both tabs in Chrome at 1720 px and in a 390 px frame, reading the JavaScript bundle for the states this account can't reach (Pay as you go, paid, cancelled, past due), timing the page's requests, and making requests fail in the browser to see the error states. No payments: the only step toward checkout was opening the upgrade page from **Upgrade plan**.
 

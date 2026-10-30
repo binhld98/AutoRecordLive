@@ -34,13 +34,13 @@ Marketing and advertising landing pages live in `fe/ads/`. They are separate fro
 | The API sends `camelCase` JSON with ISO 8601 UTC timestamps; paged lists return `{ items, nextCursor, total }` | Front-end types match responses without conversion, and the UI shows every date in the user's own time zone |
 | The server computes derived state (e.g. `liveStatus`, `runsOutAt`) and parses host links | Only the server knows when it last checked a host and how fast quota is being used, and only it can follow short links like `v.douyin.com/…` |
 | Anything the browser loads by itself comes as a signed URL inside the recording data: `playlistUrl`, `subtitlesUrl`, `downloadUrl`. A section download gets its signed URL from the API when requested. Segment URLs in the playlist stay valid for the recording's length plus a margin | Recordings are private, but `<video>`, `<track>`, native HLS on iPhone, and download links can't send the in-memory access token. hls.js loads a finished recording's playlist only once, so segment URLs that expire sooner break playback partway through (reference issue R18) |
-| One module holds the text of every message, keyed by the message catalog's IDs ([notifications user flows](./user-flows-notifications.md)). Notifications from the API carry a `type` (a catalog ID) and the values its text needs, never sentences | Wording stays the same everywhere and can be translated in one place. The reference stores each notification's sentences in the account's language at the time, so an account with no language set read them in Chinese |
+| One module holds the text of every message, keyed by the message catalog's IDs ([notifications user flows](./flows/user-flows-notifications.md)). Notifications from the API carry a `type` (a catalog ID) and the values its text needs, never sentences | Wording stays the same everywhere and can be translated in one place. The reference stores each notification's sentences in the account's language at the time, so an account with no language set read them in Chinese |
 | Load no third-party scripts: no analytics tags, session replay, or tag managers | Recordings and account data stay private, and no other script on the page can read them (reference issues R13, R25) |
 | Build pages against a fake API with the real function names and shapes ([roadmap](./roadmap.md)) | The front end can start before the back end, and switching later doesn't change any page |
 
 ## Application routes
 
-Use a public authentication layout and a separate authenticated application shell with shared navigation, account menu, and notification affordances. Authenticated routes also need a verified email; until then they show `/verify-email`. Flows for every route: [user flows](./user-flows.md).
+Use a public authentication layout and a separate authenticated application shell with shared navigation, account menu, and notification affordances. Authenticated routes also need a verified email; until then they show `/verify-email`. Flows for every route: [user flows](./flows/user-flows.md).
 
 | Route area | Access | Main responsibilities |
 | --- | --- | --- |

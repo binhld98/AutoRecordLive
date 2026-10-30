@@ -2,12 +2,12 @@
 
 This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
-- What the reference app does, and its known issues (R1–R42): [reference app study](./ref-app-study.md)
+- What the reference app does, and its known issues (R1–R42): [reference app study](./study/ref-app-study.md)
 - Stack, routes, and technical decisions: [front-end architecture overview](./fe-arch.md)
-- How people move through the app: [user flows and sitemap](./user-flows.md)
-- How hosts are followed, listened to, and recorded: [hosts user flows](./user-flows-hosts.md)
-- How recordings are watched, downloaded, and expire: [recordings user flows](./user-flows-recordings.md)
-- When the app uses a notification, a toast, or another message, and what each one says: [notifications user flows](./user-flows-notifications.md)
+- How people move through the app: [user flows and sitemap](./flows/user-flows.md)
+- How hosts are followed, listened to, and recorded: [hosts user flows](./flows/user-flows-hosts.md)
+- How recordings are watched, downloaded, and expire: [recordings user flows](./flows/user-flows-recordings.md)
+- When the app uses a notification, a toast, or another message, and what each one says: [notifications user flows](./flows/user-flows-notifications.md)
 
 ## Product principles
 

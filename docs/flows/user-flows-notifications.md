@@ -1,6 +1,6 @@
 # User flows: notifications and messages
 
-How AutoRecordLive tells people what happened: notifications in `/notifications` and by email, toasts after their own actions, statuses on the items, inline messages, and confirmations. It ends with the catalog of every core message. The rest of the app is in [user flows](./user-flows.md); how the reference app does it: [Notifications](./ref-app-notifications.md). Principles P1–P8 are the product principles in the roadmap.
+How AutoRecordLive tells people what happened: notifications in `/notifications` and by email, toasts after their own actions, statuses on the items, inline messages, and confirmations. It ends with the catalog of every core message. The rest of the app is in [user flows](./user-flows.md); how the reference app does it: [Notifications](../study/ref-app-notifications.md). Principles P1–P8 are the product principles in the roadmap.
 
 Flow numbers (11, 12, 13) continue those in the other user flows.
 

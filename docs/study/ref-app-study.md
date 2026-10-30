@@ -1,6 +1,6 @@
 # Reference app study
 
-AutoRecordLive is modeled on https://app.autorecordlive.com. This document is the overview of what that app does and how, so we can match the parts that work and fix the parts that don't. Our plan is in the [roadmap](./roadmap.md).
+AutoRecordLive is modeled on https://app.autorecordlive.com. This document is the overview of what that app does and how, so we can match the parts that work and fix the parts that don't. Our plan is in the [roadmap](../roadmap.md).
 
 Deep studies of single screens:
 

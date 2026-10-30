@@ -1,6 +1,6 @@
 # Reference app: Notifications
 
-How the reference app tells users what happened: the `/notifications` inbox, the header bell and its pop-up, read state and links, email settings, and the toasts that answer the user's own clicks. The [reference app study](./ref-app-study.md) covers the whole app at overview level. Our own design is in the [notifications user flows](./user-flows-notifications.md).
+How the reference app tells users what happened: the `/notifications` inbox, the header bell and its pop-up, read state and links, email settings, and the toasts that answer the user's own clicks. The [reference app study](./ref-app-study.md) covers the whole app at overview level. Our own design is in the [notifications user flows](../flows/user-flows-notifications.md).
 
 Studied on 2026-10-28 with the Free Trial account from the dashboard study. It held 24 notifications from that study's test (15 streamers added, listeners started and stopped, two recordings, time running out) and one export. Methods: using the inbox, the bell panel, and the email settings in a browser pane about 1000 px wide and at 375 px, reading the JavaScript bundle, and calling the notifications API with read-only requests. The only write was opening one notification, which marked it read. We didn't change settings or trigger new events, so the pop-up's behavior comes from the code and the dashboard study's test.
 

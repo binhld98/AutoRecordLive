@@ -1,6 +1,6 @@
 # Reference app: Recordings
 
-How the reference app's recordings pages work: the list at `/recordings`, the detail page with its player, downloads (exports), and what the free plan locks. The [reference app study](./ref-app-study.md) covers the whole app at overview level. Our own design is in the [recordings user flows](./user-flows-recordings.md).
+How the reference app's recordings pages work: the list at `/recordings`, the detail page with its player, downloads (exports), and what the free plan locks. The [reference app study](./ref-app-study.md) covers the whole app at overview level. Our own design is in the [recordings user flows](../flows/user-flows-recordings.md).
 
 Studied on 2026-10-27 with the Free Trial account from the dashboard study: no recording time left and two recordings of Al Jazeera English (3:00 and 9:00) from the day before. Methods: using the screens in a browser pane 800, 1024, and 1440 px wide (and 375 px for phones), reading the JavaScript bundle, timing the requests the page made, checking the public recordings list, and requesting one export. No payments, and the export file wasn't downloaded.
 
