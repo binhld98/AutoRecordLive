@@ -13,7 +13,7 @@ Build an application that lets users:
 This repository holds only the user app. The back end, admin console, and landing pages are out of scope.
 
 - `user-app/` — the user app, where users follow hosts and watch and download recordings.
-- `docs/` — product, architecture, and development documentation.
+- `docs/` — draft product, architecture, and development docs. Don't follow them unless the user asks.
 
 ## Task Tracking
 
