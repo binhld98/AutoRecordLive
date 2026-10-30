@@ -1,6 +1,6 @@
 # User flows: recordings
 
-How people find, watch, cut, and download recordings on `/recordings` and `/recordings/:id`, and what happens when they expire. This is the detailed workflow for those screens; the rest of the app (sitemap, limits) is in [user flows](./user-flows.md), and the wording of its messages is in the [notifications user flows](./user-flows-notifications.md). How the reference app does the same job: [Recordings](./ref-app-recordings.md). Principles P1–P8 are the product principles in the roadmap.
+How people find, watch, cut, and download recordings on `/recordings` and `/recordings/:id`, and what happens when they expire. This is the detailed workflow for those screens; the rest of the app (sitemap, limits) is in [user flows](./user-flows.md), and the wording of its messages is in the [notifications user flows](./user-flows-notifications.md). How the reference app does the same job: [Recordings](../study/ref-app-recordings.md). Principles P1–P8 are the product principles in the roadmap.
 
 Flow numbers (3, 6) match user flows, so references elsewhere stay valid.
 

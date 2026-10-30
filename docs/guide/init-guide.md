@@ -1,13 +1,13 @@
-# Core front-end initialization guide
+# Initialization guide
 
-These steps create the core SPA in an empty `fe/app/` directory, using the stack from the [front-end architecture overview](./fe-arch.md). You end up with a configured project that shows a Hello World screen. Every command runs without prompts.
+These steps create the user app in an empty `user-app/` directory, using the stack from the [user app architecture overview](../arch.md). You end up with a configured project that shows a Hello World screen. Every command runs without prompts.
 
 Last run with Node.js 22.23, npm 10.9, create-vite 9.3, Vite 8, React 19, TypeScript 6, Tailwind CSS 4, and shadcn 4.22.
 
 ## 1. Scaffold
 
 ```bash
-cd fe/app
+cd user-app
 npm create -y vite@latest . -- --template react-ts --no-interactive
 npm install
 ```
@@ -98,7 +98,7 @@ function App() {
 export default App
 ```
 
-Then replace `README.md` with a short description of the app and a link to `../../docs/fe-arch.md`. Include prerequisites, quick start (`npm install`, `npm run dev`), the `dev`/`build`/`preview`/`lint` scripts, and how to add components with `npx shadcn@latest add <name>`.
+Then replace `README.md` with a short description of the app and a link to `../docs/arch.md`. Include prerequisites, quick start (`npm install`, `npm run dev`), the `dev`/`build`/`preview`/`lint` scripts, and how to add components with `npx shadcn@latest add <name>`.
 
 ## 6. Verify
 

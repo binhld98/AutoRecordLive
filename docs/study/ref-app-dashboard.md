@@ -1,6 +1,6 @@
 # Reference app: Streamers dashboard
 
-How the reference app's dashboard works: the Streamers list at `/`, the Add Streamer flow, where live status comes from, and how the active listener limit is counted. The [reference app study](./ref-app-study.md) covers the whole app at overview level. Our own design is in the [hosts user flows](./user-flows-hosts.md).
+How the reference app's dashboard works: the Streamers list at `/`, the Add Streamer flow, where live status comes from, and how the active listener limit is counted. The [reference app study](./ref-app-study.md) covers the whole app at overview level. Our own design is in the [hosts user flows](../flows/user-flows-hosts.md).
 
 Studied on 2026-10-26 with a new Free Trial account (1 active listener, 10 minutes of recording). Methods: using the screen in a browser pane about 800 px wide (and at 375 px for phones), reading the JavaScript bundle, logging every API call the page made, and making write calls on that account: adding 15 streamers, starting, stopping, and removing them, and recording a live stream until the trial's time ran out. No payments.
 

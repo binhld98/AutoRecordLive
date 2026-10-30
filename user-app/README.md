@@ -1,8 +1,8 @@
-# AutoRecordLive Core App
+# AutoRecordLive User App
 
-The core AutoRecordLive web application: a React + TypeScript SPA built with Vite. Users sign in here, manage the hosts and channels they follow, review and download recordings, manage notifications, and view their account and plan.
+The AutoRecordLive user app: a React + TypeScript SPA built with Vite. Users sign in here, manage the hosts and channels they follow, review and download recordings, manage notifications, and view their account and plan.
 
-See the [front-end architecture overview](../../docs/fe-arch.md) for the selected stack and the planned routes.
+See the [user app architecture overview](../docs/arch.md) for the selected stack and the planned routes.
 
 ## Prerequisites
 
