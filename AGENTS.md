@@ -26,16 +26,19 @@ Build an application that lets users:
 
 ## Task Tracking
 
-Work is tracked on Trello, one board per sprint:
+Work is tracked on Trello, one board per sprint.
 
-- `S0`: [Phase 0 - Concept/Requirements](https://trello.com/b/AWtmVjbe/phase-0-concept-requirements)
+| Sprint | Board |
+| --- | --- |
+| `S0` | [Phase 0 - Concept/Requirements](https://trello.com/b/AWtmVjbe/phase-0-concept-requirements) |
+
+These rules apply to every board:
 
 - Lists: Backlog → Queued → In Progress → In Review → Closed.
 - Title cards `<sprint>-<n>: <short description>`, where `<sprint>` is the board's sprint identifier, such as `S0-4: Write product vision`. Give a new card the next unused number on its board; never reuse or renumber one.
-- Labels mark the area (`design`, `fe`, `be`, `docs`) and roadmap phase (`P1`, `P2`, `P3`).
-- Each front-end screen has a `design` card before its build card. Link the mockups on the design card.
+- Label each card with the commit type of its work, such as `feat` or `docs` (see [Commit Messages](#commit-messages)).
 - One code card is one branch and one PR. Move the card to In Progress when you create its branch, and to In Review when you open its PR.
-- Put the card key and link in the PR description, such as `S0-4: https://trello.com/c/...`. Move the card to Closed when the user confirms the PR is merged.
+- Move the card to Closed when the user confirms the PR is merged.
 
 ## Commit Messages
 
@@ -51,12 +54,13 @@ Allowed types:
 
 - `feat` — new feature
 - `fix` — bug fix
+- `docs` — documentation updates
 - `chore` — non-production maintenance, such as tooling or dependency updates
 - `refactor` — code changes that neither add a feature nor fix a bug
-- `docs` — documentation updates
-- `style` — formatting or whitespace changes with no behavior impact
 - `test` — add or update tests
-- `perf` — performance improvement
+- `style` — formatting or whitespace changes with no behavior impact
 - `ci` — continuous integration changes
 - `build` — build system or external dependency changes
+- `perf` — performance improvement
+- `arch` — big architecture decision
 - `revert` — revert a previous commit
