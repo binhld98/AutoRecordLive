@@ -26,19 +26,18 @@ Build an application that lets users:
 
 ## Task Tracking
 
-Work is tracked on Trello, one board per sprint.
+Work is tracked on Trello, with one board per sprint.
 
 | Sprint | Board |
 | --- | --- |
 | `S0` | [Phase 0 - Concept/Requirements](https://trello.com/b/AWtmVjbe/phase-0-concept-requirements) |
 
-These rules apply to every board:
+Rules for every board:
 
-- Lists: Backlog → Queued → In Progress → In Review → Closed.
-- Title cards `<sprint>-<n>: <short description>`, where `<sprint>` is the board's sprint identifier, such as `S0-4: Write product vision`. Give a new card the next unused number on its board; never reuse or renumber one.
-- Label each card with the commit type of its work, such as `feat` or `docs` (see [Commit Messages](#commit-messages)).
-- One code card is one branch and one PR. Move the card to In Progress when you create its branch, and to In Review when you open its PR.
-- Move the card to Closed when the user confirms the PR is merged.
+- **Lists:** Backlog → Queued → In Progress → In Review → Closed.
+- **Titles:** `<sprint>-<n>: <short description>`, such as `S0-4: Write product vision`. Number cards in order on each board; never reuse or renumber one.
+- **Labels:** one per card, matching the [commit type](#commit-messages) of its work, such as `feat` or `docs`.
+- **Flow:** one card is one branch and one PR. Move the card to In Progress when its branch is created, to In Review when its PR is opened, and to Closed when the user confirms the PR is merged.
 
 ## Commit Messages
 
