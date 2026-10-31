@@ -12,13 +12,15 @@ Repost creators and clippers live off moments from other people's live streams, 
 
 | Objective | Success criteria |
 | --- | --- |
-| O1 Never miss a broadcast | At least 99% of broadcasts from listening channels get recorded. Recording starts within 60 s of a channel going live. |
+| O1 Capture broadcasts reliably | Provisional beta targets: record at least 99% of broadcasts from listening channels and start recording within 60 s of a channel going live. Validate these targets during beta on both supported platforms; they are not firm launch requirements or service guarantees. |
 | O2 Get clips out fast | Every export ends in a notification: ready, or failed with a reason. None is lost silently. A ready file stays downloadable for 72 h. |
 | O3 Run as a paid product | v1 launches with billing on. |
 
 ## 3. Scope
 
 v1 covers the flows a normal user goes through, as listed in the [functional requirements](#4-functional-requirements).
+
+v1 supports only publicly accessible TikTok and Douyin live streams. Connecting a user's platform account and recording streams that require login or membership are out of scope for v1.
 
 Out of scope for v1:
 
@@ -55,10 +57,10 @@ The channel check watches listening channels and starts the recorder when one go
 ### Channels
 
 - **FR-5** Follow a channel by pasting one TikTok or Douyin link or `@username`, with a preview of the channel before saving.
-- **FR-6** Turn listening on or off per channel. A listening channel records every broadcast automatically.
+- **FR-6** Turn listening on or off per channel. A listening channel records every broadcast automatically while recording hours remain. Enabling listening while a channel is already live starts recording immediately, subject to plan limits. Show that the recording begins partway through the broadcast; the earlier portion is not captured. Turning listening off stops any active recording immediately and keeps the captured portion. A stopped listener must be turned back on manually.
 - **FR-7** The plan caps how many channels listen at once. When the cap is reached, the app says so and why.
 - **FR-8** Each channel shows whether it's live and when it was last checked.
-- **FR-9** Unfollow a channel. Its recordings stay until they expire.
+- **FR-9** Unfollow a channel. This stops any active recording immediately and keeps the captured portion. Its recordings stay until they expire.
 
 ### Recording
 
@@ -67,14 +69,14 @@ The channel check watches listening channels and starts the recorder when one go
 ### Recordings
 
 - **FR-11** List recordings, newest first, with search and filters by channel, platform, and date.
-- **FR-12** Open a recording's detail page: player, timeline, metadata, status (recording, ready, failed, has gaps), and expiry date.
-- **FR-13** A recording leaves when its plan's retention ends.
+- **FR-12** Open a recording's detail page: player, timeline, metadata, status (recording, processing, ready, failed, has gaps), and expiry date. In v1, users can watch, select parts, and export for download once recording has finished and processing is complete. This includes recordings stopped early, even if the host is still live. Make recordings available as soon as processing finishes, with no fixed processing-time target. Show a processing status during that wait. For recordings stopped early, show why they stopped.
+- **FR-13** When a recording's retention ends, hide it from the user and prevent access, including playback and new export requests. Expiry ends user access; it does not guarantee immediate physical deletion from storage. The back end may retain the source to finish exports requested before expiry and delete it later.
 
 ### Exports
 
 - **FR-14** Export a whole recording.
 - **FR-15** Select one or more parts on the timeline. Edges snap to the nearest few seconds. Each part becomes its own export.
-- **FR-16** The back end builds each export and notifies the user when it's ready. The file is kept for 72 h, after which the user can export it again while the recording exists.
+- **FR-16** The back end builds each export and notifies the user when it's ready. Exports requested before the source recording expires are allowed to finish, including those still queued or processing at expiry. Each completed export stays downloadable for 72 h from when it becomes ready, independently of its source recording's expiry. Expiring the source recording does not shorten this download window. After an export expires, the user can export it again only while the source recording has not expired.
 
 ### Notifications
 
@@ -83,9 +85,13 @@ The channel check watches listening channels and starts the recorder when one go
 
 ### Plans and billing
 
-- **FR-19** A free trial, then paid plans. Plans limit recording hours per month, channels listening at once, and how long recordings are kept.
-- **FR-20** Show usage in plain words. When recording hours run out, listening stops and the user is notified.
+- **FR-19** A free trial requires no payment method and does not automatically convert to a paid subscription. Users must explicitly subscribe to a paid plan to continue recording after the trial. The exact trial duration and limits will be configured later and are not fixed by this charter. Plans limit recording hours per month, channels listening at once, and how long recordings are kept. Recording usage is the sum of captured footage duration across channels: recording three channels for one hour uses three recording hours. Failed attempts and gaps do not consume recording hours.
+- **FR-20** Show usage in plain words. When recording hours run out, stop listening and all active recordings immediately, keep the captured portions, and notify the user. Explain that these recordings ended because the recording allowance ran out. Listening stays off when the allowance renews or increases; users must turn it back on manually.
 - **FR-21** Paying, changing plans, cancelling, and invoices go through the payment provider's hosted pages. The provider isn't chosen yet.
+- **FR-22** Upgrades take effect immediately and apply all new plan capabilities, including recalculating retention for existing unexpired recordings under the upgraded plan. Stopped listeners still require manual reactivation. Downgrades are scheduled for the end of the current paid billing period; all current plan capabilities remain available until then. Existing recordings keep their expiry dates when a downgrade takes effect; the downgraded retention applies only to new recordings. Show the scheduled plan and its effective date.
+- **FR-23** If a scheduled downgrade would leave more listening channels than the new plan allows, let the user choose which channels stay on before it takes effect, up to the new limit. At the effective date, keep the selected listeners on and turn the others off. Without a valid selection, turn all listeners off and notify the user to enable channels manually within the new limit. Turning a listener off stops any active recording immediately and keeps the captured portion, as in FR-6.
+- **FR-24** When a paid subscription ends, stop listening and new recordings. Stop any active recordings and keep the captured portions. Users retain access to existing recordings, including playback and new export requests, until those recordings expire. Existing recordings and completed exports keep their respective expiry dates.
+- **FR-25** If a renewal payment fails, notify the user and stop listening and recording when the current paid billing period ends. Payment retries do not grant a recording grace period. Preserve access to existing recordings and exports as in FR-24. After payment succeeds, stopped listeners must still be turned back on manually.
 
 ## 5. Phases
 
@@ -99,7 +105,7 @@ The channel check watches listening channels and starts the recorder when one go
 
 Phase 4 ideas:
 
-- Watch and cut a recording while the stream is still live.
+- Watch and cut a recording while it is still being recorded.
 - More platforms: YouTube, Twitch, Kick.
 - Chat and gift activity on the timeline, to find the moments worth clipping.
 - More notification channels: Telegram, Discord, browser push.
