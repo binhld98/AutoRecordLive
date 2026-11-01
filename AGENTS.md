@@ -24,6 +24,7 @@ Work is tracked on Trello, with one board per sprint.
 | Sprint | Board |
 | --- | --- |
 | `S0` | [Phase 0 - Concept/Requirements](https://trello.com/b/AWtmVjbe/phase-0-concept-requirements) |
+| `S1` | [Sprint 1 - App Shell](https://trello.com/b/4mU9eMMY/sprint-1-app-shell) |
 
 Rules for every board:
 
