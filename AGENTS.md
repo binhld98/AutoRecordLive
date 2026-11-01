@@ -2,6 +2,8 @@
 
 ## Product
 
+The product is now called LiveCatch, and [`docs/charter.md`](docs/charter.md) is the source of truth for what it must do.
+
 Build an application that lets users:
 
 - Follow hosts or channels by URL.
@@ -13,7 +15,7 @@ Build an application that lets users:
 This repository holds only the user app. The back end, admin console, and landing pages are out of scope.
 
 - `user-app/` — the user app, where users follow hosts and watch and download recordings.
-- `docs/` — draft product, architecture, and development docs. Don't follow them unless the user asks.
+- `docs/` — draft product, architecture, and development docs. Don't follow them unless the user asks. The exception is `docs/charter.md`, which is authoritative.
 
 ## Task Tracking
 
