@@ -30,8 +30,8 @@ Rules for every board:
 
 - **Lists:** Backlog → Queued → In Progress → In Review → Closed.
 - **Titles:** `<sprint>-<n>: <short description>`, such as `S0-4: Write product vision`. Number cards in order on each board; never reuse or renumber one.
-- **Labels:** one per card, matching the [commit type](#commit-messages) of its work, such as `feat` or `docs`.
-- **Access:** can read cards to gather context, but never create, move, or edit cards on your own.
+- **Labels:** at least one per card, showing its type of work as a [commit type](#commit-messages), such as `feat` or `docs`.
+- **Access:** AI agents can read, create and edit cards, including comments and labels, but never move them.
 
 ## Development Workflow
 
