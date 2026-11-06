@@ -6,8 +6,11 @@ import {
   RadioIcon,
   UserIcon,
   VideoIcon,
+  XIcon,
 } from 'lucide-react'
 import { Link, NavLink, useMatch } from 'react-router'
+import { Button } from '@/components/ui/button.tsx'
+import { SheetClose } from '@/components/ui/sheet.tsx'
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +19,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar.tsx'
 
 type NavItem = {
@@ -54,11 +58,13 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
 }
 
 function AppSidebar() {
+  const { isMobile } = useSidebar()
+
   return (
     <Sidebar>
       {/* Same 56px height as the top bar, so the two line up. */}
-      <SidebarHeader className="h-14 justify-center py-0">
-        <SidebarMenu>
+      <SidebarHeader className="h-14 flex-row items-center py-0">
+        <SidebarMenu className="min-w-0 flex-1">
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link to="/" />}>
               <span
@@ -71,6 +77,21 @@ function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        {/* Only the phone drawer is a Sheet, so its close button exists only there. */}
+        {isMobile && (
+          <SheetClose
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Close navigation"
+                className="size-11 shrink-0"
+              />
+            }
+          >
+            <XIcon className="size-6" />
+          </SheetClose>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Main">
