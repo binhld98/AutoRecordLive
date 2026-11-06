@@ -387,11 +387,8 @@ The app adds a few conventions on top of plain Tailwind. They come from shadcn/u
   <Card className="p-6" />
   ```
 
-## 6. Tools and references
+## 6. References
 
-- **Tailwind CSS IntelliSense** (VS Code extension): autocomplete, hover previews of generated CSS, and warnings about conflicting classes.
-- **Prettier plugin** (`prettier-plugin-tailwindcss`): sorts classes into a standard order.
-- **Browser dev tools**: inspect an element to see the CSS each class produced.
 - [Tailwind CSS docs](https://tailwindcss.com/docs): the reference for every utility. Search (Ctrl+K) for a CSS property, such as "letter spacing", to find its class.
 - [Styling with utility classes](https://tailwindcss.com/docs/styling-with-utility-classes): the official explanation of the approach.
 - [Theme variables](https://tailwindcss.com/docs/theme): every `@theme` namespace and its defaults.
