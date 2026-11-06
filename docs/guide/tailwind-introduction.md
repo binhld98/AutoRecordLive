@@ -8,7 +8,7 @@ Material written for v3 uses a `tailwind.config.js` file and `@tailwind` directi
 
 Tailwind is a **utility-first** CSS framework. It gives you a large set of small, single-purpose classes, and you build designs by combining them directly in your markup.
 
-It differs from component frameworks such as Bootstrap, Material UI, and Ant Design. Those ship finished components, such as buttons, cards, and modals, with a look already decided. You get a consistent UI quickly, but changing it means overriding the framework's styles. Tailwind ships no components and no visual style of its own. It provides the building blocks, and you decide how everything looks.
+It differs from component frameworks such as Bootstrap, Material UI, and Ant Design. Those ship finished components, like buttons, cards, and modals, with a look already decided. You get a consistent UI quickly, but changing it means overriding the framework's styles. Tailwind ships no components and no visual style of its own. It provides the building blocks, and you decide how everything looks.
 
 If you want ready-made components on top of Tailwind, there are options at different levels:
 
@@ -51,7 +51,7 @@ Each Tailwind class is a predefined CSS rule. For example, `px-4` sets the left 
 
 ### Why not inline styles
 
-A Tailwind class list can look like inline `style="…"` attributes. It isn't the same thing, and the differences are why Tailwind works:
+A Tailwind class list can look like inline `style="…"` attributes. It works differently in three ways:
 
 - **Design constraints.** Inline styles accept any value. Tailwind classes pick from a shared scale of spacing, colours, font sizes, and shadows, so a page stays consistent without effort.
 - **States and screen sizes.** Inline styles can't express hover, focus, or dark mode, and they can't use media queries. Tailwind can: `hover:bg-sky-600`, `md:flex`, `dark:text-white`.
@@ -66,7 +66,7 @@ Compared with hand-written CSS, Tailwind gives you:
 - **Safe changes.** Classes aren't tied to one component, so removing a class from one element can't break another page.
 - **CSS that stops growing.** You reuse the same utilities, so the stylesheet stays small as the app grows.
 
-The trade-offs are long class lists and a vocabulary to learn. Section 4 covers how to keep class lists manageable. The names follow regular patterns, so they become familiar quickly.
+The trade-offs are long class lists and a vocabulary to learn. The names follow regular patterns, so they become familiar quickly. Section 4 shows how to keep class lists manageable.
 
 ## 2. How Tailwind works
 
@@ -78,7 +78,7 @@ Tailwind is a build tool, not a fixed stylesheet. While the app builds (in LiveC
 2. Generates CSS only for the classes it finds.
 3. Puts the result where `@import "tailwindcss";` appears in your stylesheet.
 
-This on-demand engine is often called the **Just-in-Time (JIT) compiler**, the name it had when it was introduced in v2.1. Since v3 it is simply how Tailwind works, so there's no mode to turn on. Because only used classes are generated, the final CSS is small, usually a few tens of kilobytes even for large apps.
+This on-demand engine is often called the **Just-in-Time (JIT) compiler**, a name from its introduction in v2.1. Since v3 it's the only engine, so there's no mode to turn on. Because only used classes are generated, the final CSS stays small even in large apps.
 
 In v4, source files are found automatically. Tailwind skips files listed in `.gitignore`, binary files, and `node_modules`. You can add or exclude paths with the `@source` directive.
 
@@ -103,7 +103,7 @@ Since Tailwind reads files as plain text and doesn't run your code, **write ever
 | `components` | Empty by default, for your own reusable component classes |
 | `utilities` | The utility classes you use |
 
-A later layer always wins over an earlier one, whatever the selector specificity. So a utility class can always override a component class.
+A later layer always wins over an earlier one, whatever the selector specificity. This is why a utility class can always override a component class.
 
 Utilities read their values from the theme variables. For example, `p-4`, `bg-sky-500`, and `hover:bg-sky-600` compile to:
 
@@ -131,13 +131,13 @@ Utilities read their values from the theme variables. For example, `p-4`, `bg-sk
 }
 ```
 
-The `theme` layer also includes only the variables your classes use. Because tokens are real CSS variables, your own CSS can use them too, as in `var(--color-sky-500)`.
+The `theme` layer contains only the variables your classes use. Because tokens are real CSS variables, your own CSS can use them too, as in `var(--color-sky-500)`.
 
 Preflight removes browser defaults, so a plain `<h1>` has the same size and weight as body text, and lists have no bullets. That's on purpose: you style every element explicitly.
 
 ### Arbitrary values
 
-When the scale has no value you need, put one in square brackets, and the engine generates a class for it:
+When the scale has no value you need, put one in square brackets, and Tailwind generates a class for it:
 
 ```html
 <p class="text-[30px]">…</p>
@@ -260,7 +260,7 @@ To style a child when its parent is hovered, mark the parent with `group` and us
 | `xl:` | 80rem (1280 px) |
 | `2xl:` | 96rem (1536 px) |
 
-The rule is to style the phone layout with plain classes, then override at larger breakpoints:
+Style the phone layout with plain classes first, then override it at larger breakpoints:
 
 ```html
 <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">…</ul>
@@ -302,11 +302,11 @@ Variables declared in `@theme` become design tokens, and Tailwind creates matchi
 }
 ```
 
-This adds `bg-brand`, `text-brand`, `border-brand`, `font-display`, and the `3xl:` variant. The variable prefix, called a namespace, decides which utilities are created. `--color-*` makes colour utilities, `--font-*` font families, `--text-*` font sizes, `--radius-*` border radius, and `--breakpoint-*` breakpoints. `--spacing` sets the base unit for every spacing utility.
+This adds `bg-brand`, `text-brand`, `border-brand`, `font-display`, and the `3xl:` variant. The variable's prefix, called a namespace, decides which utilities are created. `--color-*` makes colour utilities, `--font-*` font families, `--text-*` font sizes, `--radius-*` border radius, and `--breakpoint-*` breakpoints. `--spacing` sets the base unit for every spacing utility.
 
-Defining a variable adds to the defaults or replaces one value. To remove a whole set of defaults, reset its namespace first. For example, `--color-*: initial;` removes the default palette.
+A new variable adds to the defaults, and a variable with an existing name replaces that default. To remove a whole set of defaults, reset its namespace first. For example, `--color-*: initial;` removes the default palette.
 
-`@theme inline` makes a utility use a variable's value directly instead of referring to the theme variable. Use it when a token points to another variable, as LiveCatch does (section 5).
+With `@theme inline`, utilities use a variable's value directly instead of a reference to the theme variable. Use it when a token refers to another variable, as LiveCatch does (section 5).
 
 ### Components first
 
