@@ -21,6 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar.tsx'
+import { cn } from '@/lib/utils.ts'
 
 type NavItem = {
   label: string
@@ -40,14 +41,17 @@ const navItems: NavItem[] = [
 ]
 
 // NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
+// In the phone drawer, links are 48px tall with 20px icons for touch.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
+  const { isMobile } = useSidebar()
   const isActive = useMatch({ path: to, end }) !== null
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={isActive}
-        className="data-active:font-semibold"
+        size={isMobile ? 'lg' : 'default'}
+        className={cn('data-active:font-semibold', isMobile && 'text-base [&_svg]:size-5')}
         render={<NavLink to={to} end={end} />}
       >
         <Icon aria-hidden="true" />
