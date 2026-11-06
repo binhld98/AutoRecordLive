@@ -49,8 +49,8 @@ function useCloseDrawerOnPick() {
 
 // NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
 // Icons are 20px everywhere. In the phone drawer, links are 48px tall for touch.
-// On desktop they're 40px, and the rail keeps shadcn's 32px with 6px padding to fit the icon.
-// Expanded links get the same 6px left padding, so icons don't shift when the sidebar collapses.
+// On desktop they're 40px tall, in the rail too, where shadcn's 32px width with 6px padding fits the icon.
+// Expanded links get the same 6px left padding, so icons don't move when the sidebar collapses.
 // shadcn shows the tooltip only in the rail, where the label is hidden.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
   const { isMobile } = useSidebar()
@@ -64,7 +64,9 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
         size={isMobile ? 'lg' : 'default'}
         className={cn(
           'data-active:font-semibold [&_svg]:size-5',
-          isMobile ? 'text-base' : 'h-10 pl-1.5 group-data-[collapsible=icon]:p-1.5!',
+          isMobile
+            ? 'text-base'
+            : 'h-10 pl-1.5 group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1.5!',
         )}
         tooltip={label}
         render={<NavLink to={to} end={end} />}
