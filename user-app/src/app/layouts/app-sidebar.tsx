@@ -56,7 +56,8 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
 function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarHeader>
+      {/* Same 56px height as the top bar, so the two line up. */}
+      <SidebarHeader className="h-14 justify-center py-0">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link to="/" />}>

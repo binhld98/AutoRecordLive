@@ -1,5 +1,4 @@
 import { BellIcon, ChevronDownIcon } from 'lucide-react'
-import { Link } from 'react-router'
 import { Button } from '@/components/ui/button.tsx'
 import { SidebarTrigger } from '@/components/ui/sidebar.tsx'
 
@@ -12,9 +11,6 @@ function TopBar() {
   return (
     <header className="flex h-14 shrink-0 items-center gap-1 border-b px-1.5 md:gap-2 md:pr-6 md:pl-4">
       <SidebarTrigger className="size-11 md:size-10" />
-      <Link to="/" className="text-lg font-bold md:hidden">
-        LiveCatch
-      </Link>
       <div className="ml-auto flex items-center gap-1 md:gap-2">
         <Button
           variant="ghost"
