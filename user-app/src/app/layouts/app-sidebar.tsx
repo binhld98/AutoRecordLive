@@ -21,6 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar.tsx'
+import { TooltipProvider } from '@/components/ui/tooltip.tsx'
 import { cn } from '@/lib/utils.ts'
 
 type NavItem = {
@@ -47,7 +48,11 @@ function useCloseDrawerOnPick() {
 }
 
 // NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
-// In the phone drawer, links are 48px tall with 20px icons for touch.
+// Icons are 20px and text 16px everywhere. In the phone drawer, links are 48px tall for touch.
+// On desktop they're 40px tall, in the rail too, where shadcn's 32px width with 6px padding fits the icon.
+// Expanded links get the same 6px left padding, so icons don't move when the sidebar collapses.
+// shadcn shows the tooltip only in the rail, where the label is hidden. The drawer gets none:
+// there a focused link's hidden tooltip would still open and swallow the Esc that closes the drawer.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
   const { isMobile } = useSidebar()
   const isActive = useMatch({ path: to, end }) !== null
@@ -58,7 +63,12 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
       <SidebarMenuButton
         isActive={isActive}
         size={isMobile ? 'lg' : 'default'}
-        className={cn('data-active:font-semibold', isMobile && 'text-base [&_svg]:size-5')}
+        className={cn(
+          'text-base data-active:font-semibold [&_svg]:size-5',
+          !isMobile &&
+            'h-10 pl-1.5 group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1.5!',
+        )}
+        tooltip={isMobile ? undefined : label}
         render={<NavLink to={to} end={end} />}
         onClick={closeDrawer}
       >
@@ -74,51 +84,62 @@ function AppSidebar() {
   const closeDrawer = useCloseDrawerOnPick()
 
   return (
-    <Sidebar>
-      {/* Same 56px height as the top bar, so the two line up. */}
-      <SidebarHeader className="h-14 flex-row items-center py-0">
-        <SidebarMenu className="min-w-0 flex-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="/" />} onClick={closeDrawer}>
-              <span
-                aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+    // One provider for the rail's tooltips, so moving between icons skips each one's open delay.
+    <TooltipProvider>
+      {/* From 768px up it collapses to a 48px icon rail, where the wordmark shows only its LC circle. */}
+      <Sidebar collapsible="icon">
+        {/* Same 56px height as the top bar, so the two line up. */}
+        <SidebarHeader className="h-14 flex-row items-center py-0">
+          <SidebarMenu className="min-w-0 flex-1">
+            <SidebarMenuItem>
+              {/* No left padding, so the LC circle sits 8px from the edge both expanded and in the rail. */}
+              <SidebarMenuButton
+                size="lg"
+                className="pl-0"
+                tooltip={isMobile ? undefined : 'LiveCatch'}
+                render={<Link to="/" />}
+                onClick={closeDrawer}
               >
-                LC
-              </span>
-              <span className="text-lg font-bold">LiveCatch</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        {/* Only the phone drawer is a Sheet, so its close button exists only there. */}
-        {isMobile && (
-          <SheetClose
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Close navigation"
-                className="size-11 shrink-0"
-              />
-            }
-          >
-            <XIcon className="size-5" />
-          </SheetClose>
-        )}
-      </SidebarHeader>
-      <SidebarContent>
-        <nav aria-label="Main">
-          <SidebarGroup>
-            {/* 4px between drawer links; desktop spacing comes with S1-13's rail work. */}
-            <SidebarMenu className={cn(isMobile && 'gap-1')}>
-              {navItems.map((item) => (
-                <NavMenuItem key={item.to} {...item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
-        </nav>
-      </SidebarContent>
-    </Sidebar>
+                <span
+                  aria-hidden="true"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+                >
+                  LC
+                </span>
+                <span className="text-lg font-bold">LiveCatch</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          {/* Only the phone drawer is a Sheet, so its close button exists only there. */}
+          {isMobile && (
+            <SheetClose
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close navigation"
+                  className="size-11 shrink-0"
+                />
+              }
+            >
+              <XIcon className="size-5" />
+            </SheetClose>
+          )}
+        </SidebarHeader>
+        <SidebarContent>
+          <nav aria-label="Main">
+            <SidebarGroup>
+              {/* 4px between links, in the drawer, the expanded sidebar and the rail. */}
+              <SidebarMenu className="gap-1">
+                {navItems.map((item) => (
+                  <NavMenuItem key={item.to} {...item} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </nav>
+        </SidebarContent>
+      </Sidebar>
+    </TooltipProvider>
   )
 }
 
