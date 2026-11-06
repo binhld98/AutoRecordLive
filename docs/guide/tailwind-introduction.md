@@ -1,33 +1,47 @@
 # Introduction to Tailwind CSS
 
-The LiveCatch user app is styled with Tailwind CSS. This guide covers the basics you need to read and write Tailwind classes, and takes 10 to 20 minutes to read. It started as notes from the course [Tailwind CSS v4 Full Course 2026](https://www.youtube.com/watch?v=6biMWgD6_JY) and is checked against the [official docs](https://tailwindcss.com/docs). The [initialization guide](./init-guide.md) explains how Tailwind was installed in the app.
+The LiveCatch user app is styled with Tailwind CSS. This guide teaches the fundamentals you need to read and write Tailwind code. It takes 10 to 20 minutes to read. It's based on the course [Tailwind CSS v4 Full Course 2026](https://www.youtube.com/watch?v=6biMWgD6_JY) and checked against the [official documentation](https://tailwindcss.com/docs). The CSS output examples were generated with the Tailwind version installed in the app. The [initialization guide](./init-guide.md) explains how Tailwind was set up in the app.
 
-Everything here applies to Tailwind CSS v4, the version the app uses (4.3 at the time of writing). Tutorials written for v3 often show a `tailwind.config.js` file and `@tailwind` directives. v4 replaced both, so skip those parts.
+Everything here applies to Tailwind CSS v4, which the app uses (4.3 at the time of writing). Many tutorials still teach v3, with a `tailwind.config.js` file and `@tailwind` directives. v4 replaced both with CSS-based configuration, so skip those parts or check the [upgrade guide](https://tailwindcss.com/docs/upgrade-guide).
 
 ## 1. What Tailwind is
 
-Tailwind is a **utility-first** CSS framework. You don't write a CSS class for each component. You put small, single-purpose classes straight on the HTML, and each class sets one or two CSS properties.
+Tailwind is a **utility-first** CSS framework. It gives you a large set of small, single-purpose classes, and you build designs by combining them directly in your markup.
 
-Plain CSS:
+It differs from component frameworks such as Bootstrap, Material UI, and Ant Design. Those ship finished components, such as buttons, cards, and modals, with a look already decided. You get a consistent UI quickly, but changing it means overriding the framework's styles. Tailwind ships no components and no visual style of its own. It provides the building blocks, and you decide how everything looks.
+
+If you want ready-made components on top of Tailwind, there are options at different levels:
+
+- **shadcn/ui** copies styled, accessible React components into your own project, so you own and edit the code. LiveCatch uses it.
+- **Headless UI** and **Base UI** provide behaviour and accessibility (menus, dialogs, focus handling) with no styles. You add the styles with Tailwind classes.
+- **Tailwind Plus** (formerly Tailwind UI) is a paid library of page sections and templates from the Tailwind team.
+
+Tailwind is widely used in production, from small projects to large companies such as OpenAI, Shopify, and GitHub.
+
+## 2. The utility-first approach
+
+### From custom classes to utilities
+
+In traditional CSS, you name a class after the thing it styles and write its rules in a stylesheet:
 
 ```html
 <button class="save-button">Save</button>
-
-<style>
-  .save-button {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    background-color: #0ea5e9;
-    color: white;
-    font-weight: 600;
-  }
-  .save-button:hover {
-    background-color: #0284c7;
-  }
-</style>
 ```
 
-Tailwind:
+```css
+.save-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #0ea5e9;
+  color: white;
+  font-weight: 600;
+}
+.save-button:hover {
+  background-color: #0284c7;
+}
+```
+
+With the utility-first approach, you split those styles into small reusable classes, one per job, and apply them in the markup:
 
 ```html
 <button class="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white hover:bg-sky-600">
@@ -35,38 +49,113 @@ Tailwind:
 </button>
 ```
 
-What you get from this:
+Each Tailwind class is a predefined CSS rule. For example, `px-4` sets the left and right padding to `1rem`, and `font-semibold` sets `font-weight: 600`.
 
-- **No naming or switching files.** The styles sit on the element, so you see them where you use them.
-- **A shared design scale.** `px-4`, `text-lg`, and `bg-sky-500` come from one set of spacing, type, and colour values, so pages stay consistent.
-- **Safe changes.** Removing a class from one element can't break another page, because classes aren't shared.
-- **Small CSS.** Tailwind generates only the classes you use.
+### Why not just use inline styles?
 
-What it costs: class lists get long, and you have to learn the names. The fix for long lists is to make components (section 9), and the names become familiar quickly because they follow a pattern.
+A Tailwind class list can look like inline `style="…"` attributes. It isn't the same thing, and the differences are why Tailwind works:
 
-## 2. How it works
+- **Design constraints.** Inline styles accept any value. Tailwind classes pick from a shared scale of spacing, colours, font sizes, and shadows, so a page stays consistent without effort.
+- **States and screen sizes.** Inline styles can't express hover, focus, or dark mode, and they can't use media queries. Tailwind can: `hover:bg-sky-600`, `md:flex`, `dark:text-white`.
+- **Normal specificity.** Inline styles beat almost every stylesheet rule and are hard to override. Tailwind classes are ordinary low-specificity CSS.
 
-Tailwind is a build tool, not a stylesheet you download. When the app builds, Tailwind:
+### Advantages over hand-written CSS
+
+- **No naming.** You don't have to invent names like `.card-header-inner-wrapper`.
+- **No switching files.** The styles are on the element, so you see what an element looks like where you use it.
+- **Safe changes.** Classes aren't tied to one component, so removing a class from one element can't break another page.
+- **CSS that stops growing.** You reuse the same utilities, so the stylesheet stays small as the app grows.
+
+The trade-offs are long class lists and a vocabulary to learn. Section 10 covers how to keep class lists manageable. The names follow regular patterns, so they become familiar quickly.
+
+## 3. How Tailwind works
+
+### Classes are generated on demand
+
+Tailwind is a build tool, not a fixed stylesheet. While the app builds (in LiveCatch, through the `@tailwindcss/vite` plugin), Tailwind:
 
 1. Scans the project's source files for anything that looks like a class name.
 2. Generates CSS only for the classes it finds.
-3. Writes that CSS where `@import "tailwindcss";` appears in your stylesheet.
+3. Puts the result where `@import "tailwindcss";` appears in your stylesheet.
 
-In the app, the `@tailwindcss/vite` plugin runs this during `npm run dev` and `npm run build`. Scanning is automatic in v4. It skips `.gitignore`d files and `node_modules`, so there is no `content` list to maintain.
+This on-demand engine is often called the **Just-in-Time (JIT) compiler**, the name it had when it was introduced in v2.1. Since v3 it is simply how Tailwind works, so there's no mode to turn on. Because only used classes are generated, the final CSS is small, usually a few tens of kilobytes even for large apps.
 
-One rule follows from this: **write class names in full.** Tailwind reads source files as plain text and doesn't run your code, so it can't see class names you build from pieces.
+In v4, source files are found automatically. Tailwind skips files listed in `.gitignore`, binary files, and `node_modules`. You can add or exclude paths with the `@source` directive.
+
+Since Tailwind reads files as plain text and doesn't run your code, **write every class name in full**:
 
 ```tsx
-// Wrong: Tailwind never sees "bg-red-500" or "bg-green-500"
+// Wrong: Tailwind never sees "bg-red-500" or "bg-green-500", so it generates neither
 <div className={`bg-${color}-500`} />
 
 // Right: both full class names appear in the source
 <div className={isError ? "bg-red-500" : "bg-green-500"} />
 ```
 
-## 3. Reading class names
+### What the generated CSS looks like
 
-Most classes follow the pattern `property-value`. Some examples:
+`@import "tailwindcss";` sets up four [cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer), in this order:
+
+| Layer | Contents |
+| --- | --- |
+| `theme` | Design tokens as CSS variables, such as colours, spacing, and fonts |
+| `base` | Preflight, a reset that removes browser defaults, plus your global element styles |
+| `components` | Empty by default, for your own reusable component classes |
+| `utilities` | The utility classes you use |
+
+A later layer always wins over an earlier one, whatever the selector specificity. So a utility class can always override a component class.
+
+Utilities read their values from the theme variables. For example, `p-4`, `bg-sky-500`, and `hover:bg-sky-600` compile to:
+
+```css
+@layer theme {
+  :root, :host {
+    --color-sky-500: oklch(68.5% 0.169 237.323);
+    --color-sky-600: oklch(58.8% 0.158 241.966);
+    --spacing: 0.25rem;
+  }
+}
+
+@layer utilities {
+  .bg-sky-500 {
+    background-color: var(--color-sky-500);
+  }
+  .p-4 {
+    padding: calc(var(--spacing) * 4);
+  }
+  @media (hover: hover) {
+    .hover\:bg-sky-600:hover {
+      background-color: var(--color-sky-600);
+    }
+  }
+}
+```
+
+The `theme` layer also includes only the variables your classes use. Because tokens are real CSS variables, your own CSS can use them too, as in `var(--color-sky-500)`.
+
+Preflight removes browser defaults, so a plain `<h1>` has the same size and weight as body text, and lists have no bullets. That's on purpose: you style every element explicitly.
+
+### Arbitrary values
+
+When the scale has no value you need, put one in square brackets, and the engine generates a class for it:
+
+```html
+<p class="text-[30px]">…</p>
+```
+
+```css
+.text-\[30px\] {
+  font-size: 30px;
+}
+```
+
+Other examples are `w-[327px]`, `bg-[#1da1f2]`, and `grid-cols-[200px_1fr]`. Use an underscore where the CSS value has a space. To use a CSS variable, wrap it in parentheses: `bg-(--brand-color)`.
+
+Arbitrary values are for one-off cases. If you need the same value twice, add it to the theme (section 9).
+
+## 4. Reading class names
+
+Most classes follow a `property-value` pattern:
 
 | Class | CSS |
 | --- | --- |
@@ -81,41 +170,27 @@ Most classes follow the pattern `property-value`. Some examples:
 | `rounded-lg` | `border-radius` |
 | `hidden` | `display: none` |
 
-Direction suffixes are the same everywhere: `t` top, `r` right, `b` bottom, `l` left, `x` horizontal, `y` vertical. In code that has to work right to left too, `s` (start) and `e` (end) follow the text direction, as in `ps-4` and `me-2`.
+Direction suffixes are the same everywhere: `t` top, `r` right, `b` bottom, `l` left, `x` horizontal, and `y` vertical. `s` (start) and `e` (end) follow the text direction, as in `ps-4` and `me-2`. A leading minus makes a value negative, as in `-mt-2`.
 
-A minus sign in front makes a value negative: `-mt-2`.
+**Spacing.** Padding, margin, gap, width, height, and similar utilities are multiples of one base unit, `--spacing`, which is `0.25rem` (4 px) by default. So `p-1` is 4 px, `p-4` is 16 px, and `p-10` is 40 px. Any whole number works, such as `w-17`. Sizes can also be fractions (`w-1/2` is 50%) or keywords: `w-full`, `w-screen`, `w-auto`, `min-h-svh`, and `size-8` (width and height together).
 
-### Spacing
+**Colours.** The default palette has named colours (`gray`, `slate`, `red`, `orange`, `green`, `sky`, `blue`, `violet`, and more) in shades from `50` (lightest) to `950` (darkest). Every colour utility uses the same names: `bg-red-50`, `text-red-700`, `border-red-200`. Add a slash and a percentage to set opacity: `bg-black/50`.
 
-Spacing utilities (padding, margin, gap, width, height, and others) are multiples of one base unit, `0.25rem`, which is 4 px by default. So `p-1` is 4 px, `p-4` is 16 px, and `p-10` is 40 px. Any whole number works in v4, so `w-17` is fine without extra setup.
-
-Sizes can also be fractions (`w-1/2` is 50%) or keywords: `w-full`, `w-screen`, `h-svh`, `min-h-svh`, `w-auto`, `size-8` (width and height together).
-
-### Colours
-
-The default palette has colour names (`slate`, `gray`, `red`, `orange`, `green`, `sky`, `blue`, `violet`, and others) and shades from `50` (lightest) to `950` (darkest). The same colour names work with any colour utility:
-
-```html
-<p class="bg-red-50 text-red-700 border border-red-200">Something went wrong.</p>
-```
-
-Add `/` and a percentage to set opacity: `bg-black/50` is black at 50%.
-
-### Typography
-
+**Typography.**
 - Size: `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, up to `text-9xl`
 - Weight: `font-normal`, `font-medium`, `font-semibold`, `font-bold`
-- Other: `leading-tight` (line height), `tracking-tight` (letter spacing), `truncate` (one line with an ellipsis), `line-clamp-2`, `uppercase`, `italic`, `underline`
+- Other: `leading-tight` (line height), `tracking-tight` (letter spacing), `truncate`, `line-clamp-2`, `uppercase`, `underline`
 
-### Borders, radius, and shadows
+**Borders and effects.**
+- Borders: `border` (1 px), `border-2`, `border-b`, with colours like `border-gray-200`
+- Radius: `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-full`
+- Shadows: `shadow-sm` and `shadow-lg`, plus `ring-2 ring-sky-500` for an outline ring that doesn't change the layout
 
-- `border` gives a 1 px border, `border-2` a 2 px one, `border-b` the bottom only. Set the colour with `border-gray-200`.
-- `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl`, `rounded-full` (a circle or pill shape)
-- `shadow-sm`, `shadow-md`, `shadow-lg`; `ring-2 ring-sky-500` draws an outline ring that doesn't affect layout.
-
-## 4. Layout
+## 5. Layout with flexbox and grid
 
 ### Flexbox
+
+Use flexbox to arrange items in one direction, such as a header, a toolbar, or a row of buttons:
 
 ```html
 <header class="flex items-center justify-between gap-4 p-4">
@@ -124,29 +199,30 @@ Add `/` and a percentage to set opacity: `bg-black/50` is black at 50%.
 </header>
 ```
 
-- `flex` turns it on; `flex-col` stacks children vertically.
-- `items-center` (cross axis) and `justify-between` / `justify-center` (main axis) align children.
-- `gap-4` spaces children without margins.
-- `flex-1` lets a child take the free space; `shrink-0` stops it shrinking.
+- `flex` makes a flex container. `flex-col` stacks children vertically, and `flex-wrap` lets them wrap.
+- `items-*` aligns children on the cross axis (`items-center`, `items-start`).
+- `justify-*` distributes them on the main axis (`justify-between`, `justify-center`).
+- `gap-*` spaces children without margins.
+- On a child, `flex-1` fills the free space and `shrink-0` stops it shrinking.
 
 ### Grid
 
+Use grid for two-dimensional layouts, such as card lists and page structure:
+
 ```html
 <ul class="grid grid-cols-3 gap-6">
+  <li class="col-span-2">…</li>
   <li>…</li>
 </ul>
 ```
 
-- `grid-cols-3` makes three equal columns. `col-span-2` makes an item span two.
-- `gap-x-*` and `gap-y-*` set column and row gaps separately.
+- `grid-cols-3` makes three equal columns. `grid-rows-*` works the same way for rows.
+- `col-span-2` makes an item span two columns.
+- `gap-x-*` and `gap-y-*` set the column and row gaps separately.
 
 ### Positioning
 
-- `relative`, `absolute`, `fixed`, `sticky`
-- `top-0`, `right-4`, `inset-0` (all four sides at 0)
-- `z-10`, `z-50` for stacking order
-
-A common pattern is a badge on the corner of a thumbnail:
+`relative`, `absolute`, `fixed`, and `sticky` set the position type. `top-0`, `left-2`, and `inset-0` (all four sides) place the element, and `z-10` sets the stacking order. A common case is a badge in the corner of a thumbnail:
 
 ```html
 <div class="relative">
@@ -155,7 +231,7 @@ A common pattern is a badge on the corner of a thumbnail:
 </div>
 ```
 
-## 5. States: hover, focus, and others
+## 6. States and variants
 
 Put a **variant** and a colon in front of a class to apply it only in that state:
 
@@ -165,7 +241,7 @@ Put a **variant** and a colon in front of a class to apply it only in that state
 </button>
 ```
 
-Common variants: `hover:`, `focus:`, `focus-visible:`, `active:`, `disabled:`, `first:`, `last:`, `odd:`, `placeholder:`.
+Common variants are `hover:`, `focus:`, `focus-visible:`, `active:`, `disabled:`, `first:`, `last:`, `odd:`, and `placeholder:`. In v4, `hover:` applies only on devices that support hovering, so taps on a phone don't leave elements stuck in their hover style.
 
 To style a child when its **parent** is hovered, mark the parent with `group` and use `group-hover:` on the child:
 
@@ -176,15 +252,15 @@ To style a child when its **parent** is hovered, mark the parent with `group` an
 </a>
 ```
 
-`peer` works the same way for a **sibling** that comes earlier, for example `peer-invalid:` on an error message after an input.
+`peer` does the same for an earlier **sibling**. For example, `peer-invalid:` can show an error message after an invalid input.
 
-Variants stack, read from left to right: `dark:hover:bg-gray-800` applies on hover in dark mode.
+Variants can be stacked, so `dark:hover:bg-gray-800` applies on hover in dark mode.
 
-## 6. Responsive design
+## 7. Responsive design
 
-Tailwind is **mobile first**. A class with no prefix applies at every width. A breakpoint prefix applies **from that width up**:
+Tailwind uses **mobile-first** breakpoints. A class with no prefix applies at every screen width. A breakpoint prefix applies the class **at that width and above**, never below:
 
-| Prefix | Minimum width |
+| Prefix | Applies from |
 | --- | --- |
 | `sm:` | 40rem (640 px) |
 | `md:` | 48rem (768 px) |
@@ -192,47 +268,37 @@ Tailwind is **mobile first**. A class with no prefix applies at every width. A b
 | `xl:` | 80rem (1280 px) |
 | `2xl:` | 96rem (1536 px) |
 
+The rule is to **style the phone layout with plain classes, then override at larger breakpoints**:
+
 ```html
 <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">…</ul>
 ```
 
-This shows one column on phones, two from 640 px, and four from 1024 px.
+This shows one column on phones, two from 640 px, and four from 1024 px. `sm:` doesn't mean "on small screens". It means "from the `sm` width up".
 
-Style the phone layout first with plain classes, then add prefixes for larger screens. `sm:` doesn't mean "on small screens". It means "from the `sm` width up". To target only below a breakpoint, use `max-*`: `max-md:hidden` hides an element below 768 px.
+To target screens **below** a breakpoint, use a `max-*` prefix. `max-md:hidden` hides an element below 768 px. Combine the two for a range: `md:max-xl:flex` applies only from 768 px up to 1280 px.
 
-Container queries are built into v4. Mark a parent with `@container` and use `@sm:`, `@md:`, and so on to respond to the **parent's** width instead of the screen's. This is useful for cards that appear in both wide and narrow places.
+Breakpoints respond to the screen width. To respond to the width of a parent element instead, mark the parent with `@container` and use container variants like `@sm:` and `@md:` on its children. This suits components that appear in both wide and narrow places.
 
-## 7. Dark mode
+## 8. Dark mode
 
-The `dark:` variant applies a class when dark mode is on:
+Dark mode is built in. The `dark:` variant applies a class when dark mode is on:
 
 ```html
 <div class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">…</div>
 ```
 
-By default, dark mode follows the operating system setting (`prefers-color-scheme`). To let the user switch it with a toggle, change what `dark:` means in your CSS. The app does it this way, so `dark:` applies inside any element with the `dark` class:
+By default, `dark:` follows the operating system setting through the `prefers-color-scheme` media query. To let users choose with a toggle instead, redefine the variant in your CSS. LiveCatch makes `dark:` apply inside any element with the `dark` class:
 
 ```css
 @custom-variant dark (&:is(.dark *));
 ```
 
-## 8. Arbitrary values and customizing the theme
+## 9. Customizing the theme
 
-### Arbitrary values
+In v4 you configure Tailwind in your main CSS file with **directives**, not in a JavaScript config file. The most important one is `@theme`.
 
-When the scale has no value you need, put one in square brackets:
-
-```html
-<div class="w-[327px] bg-[#1da1f2] grid-cols-[200px_1fr]">…</div>
-```
-
-Use an underscore where the CSS value has a space. To use a CSS variable, put it in parentheses: `bg-(--brand-color)`.
-
-Use these for one-off values. If you write the same bracket value twice, add it to the theme.
-
-### The `@theme` block
-
-In v4 you customize Tailwind in CSS, not in a JavaScript config. Variables declared in `@theme` become design tokens, and Tailwind creates utilities from them:
+Variables declared in `@theme` become design tokens, and Tailwind creates matching utilities:
 
 ```css
 @import "tailwindcss";
@@ -244,41 +310,89 @@ In v4 you customize Tailwind in CSS, not in a JavaScript config. Variables decla
 }
 ```
 
-Now `bg-brand`, `text-brand`, `border-brand`, `font-display`, and `3xl:` all exist. The prefix of the variable name tells Tailwind which utilities to make: `--color-*` for colours, `--font-*` for font families, `--breakpoint-*` for breakpoints, `--radius-*` for radius, `--spacing` for the base spacing unit, and so on. Each token is also a normal CSS variable, such as `var(--color-brand)`, so other CSS can use it.
+This adds `bg-brand`, `text-brand`, `border-brand`, `font-display`, and the `3xl:` variant. The variable prefix, called a namespace, decides which utilities are created. `--color-*` makes colour utilities, `--font-*` font families, `--text-*` font sizes, `--radius-*` border radius, and `--breakpoint-*` breakpoints. `--spacing` sets the base unit for every spacing utility.
 
-## 9. Reusing styles
+Defining a variable adds to the defaults or replaces one value. To remove a whole set of defaults, reset its namespace first. For example, `--color-*: initial;` removes the default palette.
 
-Long class lists repeated in many places are a sign you need a component, not a CSS class. In React, put the classes in a component once and reuse it:
+`@theme inline` makes a utility use a variable's value directly instead of referring to the theme variable. Use it when a token points to another variable, as LiveCatch does (section 12).
+
+## 10. Reusing styles
+
+### Prefer components
+
+Repeated class lists are a sign you need a component, not a new CSS class. In React, write the classes once in a component and reuse it:
 
 ```tsx
 function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium">{children}</span>
+  return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{children}</span>
 }
 ```
 
-For repeats inside one component, map over data instead of copying markup.
+For repeated markup inside one component, render it from data with `map` instead of copying it.
 
-Tailwind has CSS tools for the cases a component can't cover:
+### CSS directives for the rest
 
-- `@apply` uses Tailwind classes inside your own CSS. It's handy for base styles or third-party HTML you can't put classes on. Use it sparingly, because it brings back the class naming that Tailwind avoids.
-- `@layer base { … }` holds global element styles, such as the `body` background.
-- `@utility` defines a custom utility class that works with every variant (`hover:`, `md:`, and others).
+Some styles can't live in a component, such as global element styles or HTML from a third-party library. For these, write CSS with Tailwind's directives:
 
-To force a class to win over another, add `!` at the end: `bg-red-500!`. This sets `!important`, so treat it as a last resort.
+**`@layer base`** holds global styles for HTML elements:
 
-## 10. Tools
+```css
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+```
 
-- **Tailwind CSS IntelliSense** (VS Code extension): autocomplete, hover previews of the generated CSS, and warnings for conflicting classes.
-- **Prettier plugin** (`prettier-plugin-tailwindcss`): sorts classes into a standard order, so class lists read the same everywhere.
-- **Browser dev tools**: inspect an element to see exactly what CSS each class produced.
+**`@layer components`** holds reusable classes with several properties. Utilities come in a later layer, so they can still override these classes, as in `class="card p-8"`.
 
-## 11. Tailwind in LiveCatch
+```css
+@layer components {
+  .card {
+    border-radius: var(--radius-lg);
+    padding: --spacing(6);
+    background-color: var(--color-white);
+  }
+}
+```
 
-The app adds a few things on top of plain Tailwind. They come from shadcn/ui, the component library it uses.
+**`@utility`** defines your own utility class. Unlike a class in `@layer components`, it works with every variant (`hover:`, `md:`, and so on). In v3 this was written as `@layer utilities`.
 
-- **Semantic colours.** `src/index.css` defines colours by role, not by hue: `background`, `foreground`, `primary`, `muted`, `muted-foreground`, `border`, `destructive`, and others. `@theme inline` turns them into utilities such as `bg-primary`, `text-muted-foreground`, and `border-border`. Prefer these over palette colours like `bg-gray-100`, so the whole app changes together when the theme changes.
-- **Dark mode by class.** Each semantic colour has a light value under `:root` and a dark value under `.dark`. A `dark` class on `<html>` switches every colour, so components rarely need `dark:` classes of their own.
-- **`cn()` for class names.** `@/lib/utils` exports `cn`, which joins class names conditionally and resolves conflicts so the last one wins. Use it when a component accepts a `className` prop:
+```css
+@utility content-auto {
+  content-visibility: auto;
+}
+```
+
+**`@apply`** inserts the CSS of existing utilities into your own rule, as in the `body` example above. It's convenient, but it brings back the class naming that utility-first avoids, so keep it for the cases above.
+
+To force one class to win, add `!` at the end, as in `bg-red-500!`. This sets `!important`, so use it only as a last resort.
+
+### Directive summary
+
+| Directive | Purpose |
+| --- | --- |
+| `@import "tailwindcss"` | Loads Tailwind's layers, theme, Preflight, and utilities |
+| `@theme` | Defines design tokens and the utilities created from them |
+| `@source` | Adds or excludes files for class scanning |
+| `@utility` | Creates a custom utility that supports variants |
+| `@custom-variant` | Creates or redefines a variant, such as `dark` |
+| `@layer base` / `@layer components` | Puts your CSS in the right cascade layer |
+| `@apply` | Inserts utility styles into your own CSS |
+
+## 11. Tools
+
+- **Tailwind CSS IntelliSense** (VS Code extension): autocomplete, hover previews of generated CSS, and warnings about conflicting classes.
+- **Prettier plugin** (`prettier-plugin-tailwindcss`): sorts classes into a standard order.
+- **Browser dev tools**: inspect an element to see the CSS each class produced.
+
+## 12. Tailwind in LiveCatch
+
+The app adds a few conventions on top of plain Tailwind. They come from shadcn/ui.
+
+- **Use semantic colours.** `src/index.css` names colours by role, not hue: `background`, `foreground`, `primary`, `muted`, `muted-foreground`, `border`, `destructive`, and others. `@theme inline` turns them into utilities like `bg-primary`, `text-muted-foreground`, and `border-border`. Use these instead of palette colours like `bg-gray-100`, so a theme change updates the whole app.
+- **Dark mode uses a class.** Each semantic colour has a light value under `:root` and a dark value under `.dark`. The `dark` class switches all colours at once, so components rarely need their own `dark:` classes.
+- **Combine classes with `cn()`.** `@/lib/utils` exports `cn`, which joins class names conditionally and resolves conflicts so the last one wins. Use it in components that accept a `className` prop:
 
   ```tsx
   import { cn } from "@/lib/utils"
@@ -291,9 +405,10 @@ The app adds a few things on top of plain Tailwind. They come from shadcn/ui, th
   <Card className="p-6" />
   ```
 
-## 12. Further reading
+## 13. Further reading
 
-- [Tailwind CSS docs](https://tailwindcss.com/docs): the reference for every utility. Use the search box (Ctrl+K) to look up a CSS property, such as "letter spacing", and find its class.
+- [Tailwind CSS docs](https://tailwindcss.com/docs): the reference for every utility. Search (Ctrl+K) for a CSS property, such as "letter spacing", to find its class.
 - [Styling with utility classes](https://tailwindcss.com/docs/styling-with-utility-classes): the official explanation of the approach.
-- [Theme variables](https://tailwindcss.com/docs/theme): every `@theme` namespace and its default values.
-- [Upgrade guide](https://tailwindcss.com/docs/upgrade-guide): what changed from v3, useful when a tutorial or answer doesn't match v4.
+- [Theme variables](https://tailwindcss.com/docs/theme): every `@theme` namespace and its defaults.
+- [Functions and directives](https://tailwindcss.com/docs/functions-and-directives): the full list of directives.
+- [Upgrade guide](https://tailwindcss.com/docs/upgrade-guide): what changed from v3, useful when a tutorial doesn't match v4.
