@@ -20,7 +20,7 @@ function AppSidebarTrigger({ className }: AppSidebarTriggerProps) {
       aria-expanded={isMobile ? openMobile : undefined}
       onClick={toggleSidebar}
     >
-      {isMobile ? <MenuIcon className="size-6" /> : <PanelLeftIcon />}
+      {isMobile ? <MenuIcon className="size-5" /> : <PanelLeftIcon className="size-5" />}
     </Button>
   )
 }

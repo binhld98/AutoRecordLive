@@ -93,14 +93,15 @@ function AppSidebar() {
               />
             }
           >
-            <XIcon className="size-6" />
+            <XIcon className="size-5" />
           </SheetClose>
         )}
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Main">
           <SidebarGroup>
-            <SidebarMenu>
+            {/* 4px between drawer links; desktop spacing comes with S1-13's rail work. */}
+            <SidebarMenu className={cn(isMobile && 'gap-1')}>
               {navItems.map((item) => (
                 <NavMenuItem key={item.to} {...item} />
               ))}
