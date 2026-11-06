@@ -74,12 +74,19 @@ function AppSidebar() {
   const closeDrawer = useCloseDrawerOnPick()
 
   return (
-    <Sidebar>
+    // From 768px up it collapses to a 48px icon rail, where the wordmark shows only its LC circle.
+    <Sidebar collapsible="icon">
       {/* Same 56px height as the top bar, so the two line up. */}
       <SidebarHeader className="h-14 flex-row items-center py-0">
         <SidebarMenu className="min-w-0 flex-1">
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="/" />} onClick={closeDrawer}>
+            {/* No left padding, so the LC circle sits 8px from the edge both expanded and in the rail. */}
+            <SidebarMenuButton
+              size="lg"
+              className="pl-0"
+              render={<Link to="/" />}
+              onClick={closeDrawer}
+            >
               <span
                 aria-hidden="true"
                 className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
