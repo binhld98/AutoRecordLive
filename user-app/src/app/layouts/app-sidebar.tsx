@@ -47,7 +47,9 @@ function useCloseDrawerOnPick() {
 }
 
 // NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
-// In the phone drawer, links are 48px tall with 20px icons for touch.
+// Icons are 20px everywhere. In the phone drawer, links are 48px tall for touch.
+// On desktop they're 40px, and the rail keeps shadcn's 32px with 6px padding to fit the icon.
+// Expanded links get the same 6px left padding, so icons don't shift when the sidebar collapses.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
   const { isMobile } = useSidebar()
   const isActive = useMatch({ path: to, end }) !== null
@@ -58,7 +60,10 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
       <SidebarMenuButton
         isActive={isActive}
         size={isMobile ? 'lg' : 'default'}
-        className={cn('data-active:font-semibold', isMobile && 'text-base [&_svg]:size-5')}
+        className={cn(
+          'data-active:font-semibold [&_svg]:size-5',
+          isMobile ? 'text-base' : 'h-10 pl-1.5 group-data-[collapsible=icon]:p-1.5!',
+        )}
         render={<NavLink to={to} end={end} />}
         onClick={closeDrawer}
       >
@@ -116,8 +121,8 @@ function AppSidebar() {
       <SidebarContent>
         <nav aria-label="Main">
           <SidebarGroup>
-            {/* 4px between drawer links; desktop spacing comes with S1-13's rail work. */}
-            <SidebarMenu className={cn(isMobile && 'gap-1')}>
+            {/* 4px between links, in the drawer, the expanded sidebar and the rail. */}
+            <SidebarMenu className="gap-1">
               {navItems.map((item) => (
                 <NavMenuItem key={item.to} {...item} />
               ))}
