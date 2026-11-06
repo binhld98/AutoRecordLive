@@ -51,7 +51,8 @@ function useCloseDrawerOnPick() {
 // Icons are 20px and text 16px everywhere. In the phone drawer, links are 48px tall for touch.
 // On desktop they're 40px tall, in the rail too, where shadcn's 32px width with 6px padding fits the icon.
 // Expanded links get the same 6px left padding, so icons don't move when the sidebar collapses.
-// shadcn shows the tooltip only in the rail, where the label is hidden.
+// shadcn shows the tooltip only in the rail, where the label is hidden. The drawer gets none:
+// there a focused link's hidden tooltip would still open and swallow the Esc that closes the drawer.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
   const { isMobile } = useSidebar()
   const isActive = useMatch({ path: to, end }) !== null
@@ -67,7 +68,7 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
           !isMobile &&
             'h-10 pl-1.5 group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1.5!',
         )}
-        tooltip={label}
+        tooltip={isMobile ? undefined : label}
         render={<NavLink to={to} end={end} />}
         onClick={closeDrawer}
       >
@@ -95,7 +96,7 @@ function AppSidebar() {
               <SidebarMenuButton
                 size="lg"
                 className="pl-0"
-                tooltip="LiveCatch"
+                tooltip={isMobile ? undefined : 'LiveCatch'}
                 render={<Link to="/" />}
                 onClick={closeDrawer}
               >
