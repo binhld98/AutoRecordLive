@@ -40,11 +40,18 @@ const navItems: NavItem[] = [
   { label: 'Account', to: '/account', icon: UserIcon },
 ]
 
+// Picking a link in the phone drawer closes it; shadcn leaves it open.
+function useCloseDrawerOnPick() {
+  const { isMobile, setOpenMobile } = useSidebar()
+  return isMobile ? () => setOpenMobile(false) : undefined
+}
+
 // NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
 // In the phone drawer, links are 48px tall with 20px icons for touch.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
   const { isMobile } = useSidebar()
   const isActive = useMatch({ path: to, end }) !== null
+  const closeDrawer = useCloseDrawerOnPick()
 
   return (
     <SidebarMenuItem>
@@ -53,6 +60,7 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
         size={isMobile ? 'lg' : 'default'}
         className={cn('data-active:font-semibold', isMobile && 'text-base [&_svg]:size-5')}
         render={<NavLink to={to} end={end} />}
+        onClick={closeDrawer}
       >
         <Icon aria-hidden="true" />
         <span>{label}</span>
@@ -63,6 +71,7 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
 
 function AppSidebar() {
   const { isMobile } = useSidebar()
+  const closeDrawer = useCloseDrawerOnPick()
 
   return (
     <Sidebar>
@@ -70,7 +79,7 @@ function AppSidebar() {
       <SidebarHeader className="h-14 flex-row items-center py-0">
         <SidebarMenu className="min-w-0 flex-1">
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="/" />}>
+            <SidebarMenuButton size="lg" render={<Link to="/" />} onClick={closeDrawer}>
               <span
                 aria-hidden="true"
                 className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
