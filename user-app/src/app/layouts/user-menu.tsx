@@ -47,13 +47,13 @@ type ToggleRowProps = {
 }
 
 // A labelled row of toggle buttons, where exactly one is always pressed. Arrow keys move between them.
-// Buttons are 44×40 on every screen, for touch.
+// Each row is 40px tall, and its buttons shrink to fit.
 function ToggleRow({ label, icon: Icon, value, onValueChange, children }: ToggleRowProps) {
   const labelId = useId()
 
   return (
-    <div className="flex min-h-13 items-center justify-between gap-2 pr-1 pl-3">
-      <span id={labelId} className="flex items-center gap-2.5">
+    <div className="flex h-10 items-center justify-between gap-2 px-2">
+      <span id={labelId} className="flex items-center gap-2">
         <Icon aria-hidden="true" className="size-4" />
         {label}
       </span>
@@ -63,7 +63,7 @@ function ToggleRow({ label, icon: Icon, value, onValueChange, children }: Toggle
         value={[value]}
         onValueChange={(next) => next.length > 0 && onValueChange(next[0])}
         spacing={0.5}
-        className="rounded-lg border p-0.5"
+        className="h-full rounded-lg border p-0.5"
       >
         {children}
       </ToggleGroup>
@@ -72,7 +72,7 @@ function ToggleRow({ label, icon: Icon, value, onValueChange, children }: Toggle
 }
 
 const toggleItemClassName =
-  'h-10 w-11 rounded-md px-0 text-muted-foreground aria-pressed:text-foreground'
+  'h-full w-11 rounded-md px-0 text-muted-foreground aria-pressed:text-foreground'
 
 // A Popover, not a Menu: the Theme and Language button groups don't fit a Menu's arrow-key rows.
 function UserMenu() {
@@ -104,8 +104,9 @@ function UserMenu() {
         align="end"
         sideOffset={isMobile ? phoneOffset : desktopOffset}
         aria-label="User menu"
+        className="gap-2 p-2"
       >
-        <div className="flex flex-col gap-0.5 px-3 py-2.5">
+        <div className="flex flex-col px-2">
           <span className="font-semibold">{userName}</span>
           <span className="text-sm text-muted-foreground">{userEmail}</span>
         </div>
@@ -118,7 +119,7 @@ function UserMenu() {
               aria-label={label}
               className={toggleItemClassName}
             >
-              <Icon aria-hidden="true" />
+              <Icon aria-hidden="true" className="size-4" />
             </ToggleGroupItem>
           ))}
         </ToggleRow>
@@ -146,7 +147,7 @@ function UserMenu() {
           render={
             <Button
               variant="ghost"
-              className="h-10 justify-start gap-2.5 px-3 text-sm font-normal"
+              className="h-10 justify-start gap-2 px-2 text-sm font-normal"
             />
           }
         >
