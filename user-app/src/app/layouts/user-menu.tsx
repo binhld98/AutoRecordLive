@@ -1,7 +1,18 @@
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
-import { ChevronDownIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import {
+  ChevronDownIcon,
+  LanguagesIcon,
+  MonitorIcon,
+  MoonIcon,
+  SunIcon,
+  SunMoonIcon,
+} from 'lucide-react'
+import type { ReactNode } from 'react'
+import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { Popover, PopoverTrigger } from '@/components/ui/popover.tsx'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 import { useIsMobile } from '@/hooks/use-mobile.ts'
 
 // Placeholders until the app has user data.
@@ -12,11 +23,64 @@ const userEmail = 'user@example.com'
 const desktopOffset = 12
 const phoneOffset = 10
 
+const themeOptions: { value: string; label: string; icon: LucideIcon }[] = [
+  { value: 'light', label: 'Light', icon: SunIcon },
+  { value: 'dark', label: 'Dark', icon: MoonIcon },
+  { value: 'system', label: 'System', icon: MonitorIcon },
+]
+
+// Each language is named in its own script, so screen readers say it the way its speakers would.
+const languageOptions: { value: string; code: string; label: string }[] = [
+  { value: 'vi', code: 'VN', label: 'Tiếng Việt' },
+  { value: 'en', code: 'EN', label: 'English' },
+  { value: 'zh', code: 'CN', label: '中文' },
+]
+
+type ToggleRowProps = {
+  label: string
+  icon: LucideIcon
+  value: string
+  onValueChange: (value: string) => void
+  children: ReactNode
+}
+
+// A labelled row of toggle buttons, where exactly one is always pressed. Arrow keys move between them.
+// Buttons are 44×40 on every screen, for touch.
+function ToggleRow({ label, icon: Icon, value, onValueChange, children }: ToggleRowProps) {
+  const labelId = useId()
+
+  return (
+    <div className="flex min-h-13 items-center justify-between gap-2 pr-1 pl-3">
+      <span id={labelId} className="flex items-center gap-2.5">
+        <Icon aria-hidden="true" className="size-4" />
+        {label}
+      </span>
+      {/* Base UI lets a click unpress the pressed button, which would leave none, so that change is ignored. */}
+      <ToggleGroup
+        aria-labelledby={labelId}
+        value={[value]}
+        onValueChange={(next) => next.length > 0 && onValueChange(next[0])}
+        spacing={0.5}
+        className="rounded-lg border p-0.5"
+      >
+        {children}
+      </ToggleGroup>
+    </div>
+  )
+}
+
+const toggleItemClassName =
+  'h-10 w-11 rounded-md px-0 text-muted-foreground aria-pressed:text-foreground'
+
 // A Popover, not a Menu: the Theme and Language button groups don't fit a Menu's arrow-key rows.
 // The panel uses Base UI's parts directly because shadcn's PopoverContent can't pass collisionPadding,
 // which keeps it 8px from the screen edge. Its look copies PopoverContent's classes.
 function UserMenu() {
   const isMobile = useIsMobile()
+  // Placeholders: theming and translation are out of scope, so a choice changes nothing and lasts until reload.
+  // The state lives here rather than in the panel, so it survives closing the panel.
+  const [theme, setTheme] = useState('system')
+  const [language, setLanguage] = useState('en')
 
   return (
     <Popover>
@@ -53,6 +117,36 @@ function UserMenu() {
               <span className="font-semibold">{userName}</span>
               <span className="text-[13px] text-muted-foreground">{userEmail}</span>
             </div>
+            <ToggleRow label="Theme" icon={SunMoonIcon} value={theme} onValueChange={setTheme}>
+              {themeOptions.map(({ value, label, icon: Icon }) => (
+                <ToggleGroupItem
+                  key={value}
+                  value={value}
+                  aria-label={label}
+                  className={toggleItemClassName}
+                >
+                  <Icon aria-hidden="true" />
+                </ToggleGroupItem>
+              ))}
+            </ToggleRow>
+            <ToggleRow
+              label="Language"
+              icon={LanguagesIcon}
+              value={language}
+              onValueChange={setLanguage}
+            >
+              {languageOptions.map(({ value, code, label }) => (
+                <ToggleGroupItem
+                  key={value}
+                  value={value}
+                  lang={value}
+                  aria-label={label}
+                  className={`${toggleItemClassName} text-xs font-semibold`}
+                >
+                  {code}
+                </ToggleGroupItem>
+              ))}
+            </ToggleRow>
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>
