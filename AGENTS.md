@@ -17,6 +17,11 @@ This repository holds only the user app. The back end, admin console, and landin
 - `user-app/` — the user app, where users follow hosts and watch and download recordings.
 - `docs/` — draft product, architecture, and development docs. Don't follow them unless the user asks. The exception is `docs/charter.md`, which is authoritative.
 
+## UI Design
+
+- Design artboards are raw drafts that show the UI's structure, to help break it into components. They aren't pixel specs, so don't copy their exact pixel values.
+- Use shadcn/ui components with their default styles. Add your own styles only where the default looks too different from the design.
+
 ## Task Tracking
 
 Work is tracked on Trello, with one board per sprint.
