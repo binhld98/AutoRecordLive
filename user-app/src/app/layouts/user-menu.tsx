@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   ChevronDownIcon,
   LanguagesIcon,
+  LogOutIcon,
   MonitorIcon,
   MoonIcon,
   SunIcon,
@@ -12,6 +13,7 @@ import type { ReactNode } from 'react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { Popover, PopoverTrigger } from '@/components/ui/popover.tsx'
+import { Separator } from '@/components/ui/separator.tsx'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 import { useIsMobile } from '@/hooks/use-mobile.ts'
 
@@ -69,6 +71,9 @@ function ToggleRow({ label, icon: Icon, value, onValueChange, children }: Toggle
   )
 }
 
+// Dividers run edge to edge, through the panel's 4px padding.
+const dividerClassName = '-mx-1 my-1 data-horizontal:w-auto'
+
 const toggleItemClassName =
   'h-10 w-11 rounded-md px-0 text-muted-foreground aria-pressed:text-foreground'
 
@@ -115,8 +120,9 @@ function UserMenu() {
           >
             <div className="flex flex-col gap-0.5 px-3 py-2.5">
               <span className="font-semibold">{userName}</span>
-              <span className="text-[13px] text-muted-foreground">{userEmail}</span>
+              <span className="text-[12px] text-muted-foreground">{userEmail}</span>
             </div>
+            <Separator className={dividerClassName} />
             <ToggleRow label="Theme" icon={SunMoonIcon} value={theme} onValueChange={setTheme}>
               {themeOptions.map(({ value, label, icon: Icon }) => (
                 <ToggleGroupItem
@@ -147,6 +153,19 @@ function UserMenu() {
                 </ToggleGroupItem>
               ))}
             </ToggleRow>
+            <Separator className={dividerClassName} />
+            {/* Auth is out of scope, so Log out only closes the panel for now. */}
+            <PopoverPrimitive.Close
+              render={
+                <Button
+                  variant="ghost"
+                  className="h-auto min-h-11 justify-start gap-2.5 px-3 text-sm font-normal"
+                />
+              }
+            >
+              <LogOutIcon aria-hidden="true" />
+              Log out
+            </PopoverPrimitive.Close>
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>
