@@ -14,16 +14,11 @@ import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx'
 import { Separator } from '@/components/ui/separator.tsx'
-import { useSidebar } from '@/components/ui/sidebar.tsx'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 
 // Placeholders until the app has user data.
 const userName = 'User'
 const userEmail = 'user@example.com'
-
-// The trigger is 40px on desktop and 44px on phones, so these offsets both put the panel 4px under the 56px top bar.
-const desktopOffset = 12
-const phoneOffset = 10
 
 const themeOptions: { value: string; label: string; icon: LucideIcon }[] = [
   { value: 'light', label: 'Light', icon: SunIcon },
@@ -76,7 +71,6 @@ const toggleItemClassName =
 
 // A Popover, not a Menu: the Theme and Language button groups don't fit a Menu's arrow-key rows.
 function UserMenu() {
-  const { isMobile } = useSidebar()
   // Placeholders: theming and translation are out of scope, so a choice changes nothing and lasts until reload.
   // The state lives here rather than in the panel, so it survives closing the panel.
   const [theme, setTheme] = useState('system')
@@ -102,11 +96,10 @@ function UserMenu() {
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        sideOffset={isMobile ? phoneOffset : desktopOffset}
         aria-label="User menu"
-        className="gap-2 p-2"
+        className="w-70 max-w-(--available-width) gap-2 p-2"
       >
-        <div className="flex flex-col px-2">
+        <div className="flex flex-col p-2">
           <span className="font-semibold">{userName}</span>
           <span className="text-sm text-muted-foreground">{userEmail}</span>
         </div>
