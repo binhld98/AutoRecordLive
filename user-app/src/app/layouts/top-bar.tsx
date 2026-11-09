@@ -1,10 +1,10 @@
-import { BellIcon, ChevronDownIcon } from 'lucide-react'
+import { BellIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button.tsx'
 import AppSidebarTrigger from './app-sidebar-trigger.tsx'
+import UserMenu from './user-menu.tsx'
 
-// Placeholders until the app has notification and user data.
+// Placeholder until the app has notification data.
 const unreadCount = 3
-const userName = 'User'
 
 // Controls are 44px on phones for touch, 40px from 768px up.
 function TopBar() {
@@ -26,17 +26,7 @@ function TopBar() {
             {unreadCount}
           </span>
         </Button>
-        <Button
-          variant="ghost"
-          aria-label="Open user menu"
-          className="h-11 min-w-11 rounded-full p-0 md:h-10 md:gap-2 md:border-border md:pr-2 md:pl-1"
-        >
-          <span className="flex size-8 items-center justify-center rounded-full bg-muted font-semibold">
-            {userName.charAt(0)}
-          </span>
-          <span className="hidden md:inline">{userName}</span>
-          <ChevronDownIcon className="hidden md:block" />
-        </Button>
+        <UserMenu />
       </div>
     </header>
   )
