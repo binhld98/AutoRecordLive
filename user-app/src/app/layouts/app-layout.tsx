@@ -10,7 +10,7 @@ function AppLayout() {
       {/* Not SidebarInset: it renders a <main> of its own, and the page's <main> lives in here. */}
       <div className="flex min-w-0 flex-1 flex-col bg-background">
         <TopBar />
-        <main id="content" className="flex-1 px-4 py-5 md:p-8">
+        <main id="content" className="flex-1 p-4">
           <Outlet />
         </main>
       </div>

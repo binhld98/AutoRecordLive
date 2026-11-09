@@ -22,7 +22,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar.tsx'
 import { TooltipProvider } from '@/components/ui/tooltip.tsx'
-import { cn } from '@/lib/utils.ts'
 
 type NavItem = {
   label: string
@@ -48,9 +47,8 @@ function useCloseDrawerOnPick() {
 }
 
 // NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
-// Icons are 20px and text 16px everywhere. In the phone drawer, links are 48px tall for touch.
-// On desktop they're 40px tall, in the rail too, where shadcn's 32px width with 6px padding fits the icon.
-// Expanded links get the same 6px left padding, so icons don't move when the sidebar collapses.
+// Icons are 20px and text 16px everywhere. Links are 40px tall with 6px padding all around, in the drawer,
+// the sidebar and the rail, where shadcn's 32px width fits the icon. So icons don't move when the sidebar collapses.
 // shadcn shows the tooltip only in the rail, where the label is hidden. The drawer gets none:
 // there a focused link's hidden tooltip would still open and swallow the Esc that closes the drawer.
 function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
@@ -62,12 +60,7 @@ function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={isActive}
-        size={isMobile ? 'lg' : 'default'}
-        className={cn(
-          'text-base data-active:font-semibold [&_svg]:size-5',
-          !isMobile &&
-            'h-10 pl-1.5 group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1.5!',
-        )}
+        className="h-10 p-1.5 text-base data-active:font-semibold group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1.5! [&_svg]:size-5"
         tooltip={isMobile ? undefined : label}
         render={<NavLink to={to} end={end} />}
         onClick={closeDrawer}
@@ -118,7 +111,7 @@ function AppSidebar() {
                   variant="ghost"
                   size="icon"
                   aria-label="Close navigation"
-                  className="size-11 shrink-0"
+                  className="size-10 shrink-0"
                 />
               }
             >
@@ -129,8 +122,8 @@ function AppSidebar() {
         <SidebarContent>
           <nav aria-label="Main">
             <SidebarGroup>
-              {/* 4px between links, in the drawer, the expanded sidebar and the rail. */}
-              <SidebarMenu className="gap-1">
+              {/* 8px between links, in the drawer, the expanded sidebar and the rail. */}
+              <SidebarMenu className="gap-2">
                 {navItems.map((item) => (
                   <NavMenuItem key={item.to} {...item} />
                 ))}
