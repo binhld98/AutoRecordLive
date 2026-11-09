@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from 'react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button.tsx'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx'
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/ui/popover.tsx'
 import { Separator } from '@/components/ui/separator.tsx'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 
@@ -100,8 +100,8 @@ function UserMenu() {
         className="w-70 max-w-(--available-width) gap-2 p-2"
       >
         <div className="flex flex-col p-2">
-          <span className="font-semibold">{userName}</span>
-          <span className="text-sm text-muted-foreground">{userEmail}</span>
+          <PopoverTitle className="text-base font-semibold">{userName}</PopoverTitle>
+          <span className="text-xs text-muted-foreground">{userEmail}</span>
         </div>
         <Separator />
         <ToggleRow label="Theme" icon={SunMoonIcon} value={theme} onValueChange={setTheme}>
