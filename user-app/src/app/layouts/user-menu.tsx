@@ -84,7 +84,7 @@ function UserMenu() {
           <Button
             variant="ghost"
             aria-label="User menu"
-            className="h-11 min-w-11 rounded-full p-0 md:h-10 md:gap-2 md:border-border md:pr-2 md:pl-1 md:aria-expanded:border-foreground"
+            className="h-10 min-w-10 rounded-full p-0 md:gap-2 md:border-border md:pr-2 md:pl-1 md:aria-expanded:border-foreground"
           />
         }
       >
