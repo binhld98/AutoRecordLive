@@ -117,6 +117,7 @@ function NotificationsMenu() {
           ))}
         </ul>
         <PopoverPrimitive.Close
+          nativeButton={false}
           render={
             <Link
               to="/notifications"
