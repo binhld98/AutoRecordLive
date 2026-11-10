@@ -1,9 +1,13 @@
-import { Outlet } from 'react-router'
+import { Outlet, useLocation } from 'react-router'
+import ErrorBoundary from '../error-boundary.tsx'
+import PageError from '../page-error.tsx'
 import AppSidebar from './app-sidebar.tsx'
 import AppSidebarProvider from './app-sidebar-provider.tsx'
 import TopBar from './top-bar.tsx'
 
 function AppLayout() {
+  const { pathname } = useLocation()
+
   return (
     <AppSidebarProvider>
       <AppSidebar />
@@ -11,7 +15,10 @@ function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col bg-background">
         <TopBar />
         <main id="content" className="flex-1 p-4">
-          <Outlet />
+          {/* A crashing page shows PageError here while the nav keeps working. Navigating away clears it. */}
+          <ErrorBoundary resetKey={pathname} fallback={(reset) => <PageError onRetry={reset} />}>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </AppSidebarProvider>
