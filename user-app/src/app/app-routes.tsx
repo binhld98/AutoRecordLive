@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router'
 import AppLayout from './layouts/app-layout.tsx'
+import NotFoundPage from './not-found-page.tsx'
 import AccountPage from '@/features/account/account-page.tsx'
 import PlanPage from '@/features/account/plan-page.tsx'
 import ChannelsPage from '@/features/channels/channels-page.tsx'
@@ -28,6 +29,7 @@ function AppRoutes() {
         <Route path="account" element={<AccountPage />} />
         <Route path="account/plan" element={<PlanPage />} />
       </Route>
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
