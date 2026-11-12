@@ -1,9 +1,9 @@
 import { Outlet, useLocation } from 'react-router'
 import ErrorBoundary from '../error-boundary.tsx'
 import PageError from '../page-error.tsx'
-import AppSidebar from './app-sidebar.tsx'
-import AppSidebarProvider from './app-sidebar-provider.tsx'
-import TopBar from './top-bar.tsx'
+import AppSidebar from './sidebar/app-sidebar.tsx'
+import AppSidebarProvider from './sidebar/app-sidebar-provider.tsx'
+import TopBar from './top-bar/top-bar.tsx'
 
 function AppLayout() {
   const { pathname } = useLocation()
