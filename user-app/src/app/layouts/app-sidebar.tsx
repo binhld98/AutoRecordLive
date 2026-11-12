@@ -4,7 +4,6 @@ import {
   DownloadIcon,
   LayoutDashboardIcon,
   RadioIcon,
-  UserIcon,
   VideoIcon,
   XIcon,
 } from 'lucide-react'
@@ -30,14 +29,14 @@ type NavItem = {
   end?: boolean
 }
 
-// Overview matches only `/`. The rest also match their child URLs, e.g. Account on /account/plan.
+// Overview matches only `/`. The rest also match their child URLs, once areas have them.
+// Account and Billing live in the user menu, so no link here is active on their pages.
 const navItems: NavItem[] = [
   { label: 'Overview', to: '/', icon: LayoutDashboardIcon, end: true },
   { label: 'Channels', to: '/channels', icon: RadioIcon },
   { label: 'Recordings', to: '/recordings', icon: VideoIcon },
   { label: 'Exports', to: '/exports', icon: DownloadIcon },
   { label: 'Notifications', to: '/notifications', icon: BellIcon },
-  { label: 'Account', to: '/account', icon: UserIcon },
 ]
 
 // Picking a link in the phone drawer closes it; shadcn leaves it open.

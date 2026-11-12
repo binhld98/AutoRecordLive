@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router'
 import AppLayout from './layouts/app-layout.tsx'
 import NotFoundPage from './not-found-page.tsx'
 import AccountPage from '@/features/account/account-page.tsx'
-import PlanPage from '@/features/account/plan-page.tsx'
+import BillingPage from '@/features/billing/billing-page.tsx'
 import ChannelsPage from '@/features/channels/channels-page.tsx'
 import ExportsPage from '@/features/exports/exports-page.tsx'
 import NotificationsPage from '@/features/notifications/notifications-page.tsx'
@@ -27,7 +27,7 @@ function AppRoutes() {
         <Route path="exports" element={<ExportsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="account" element={<AccountPage />} />
-        <Route path="account/plan" element={<PlanPage />} />
+        <Route path="billing" element={<BillingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

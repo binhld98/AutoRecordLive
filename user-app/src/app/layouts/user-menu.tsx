@@ -2,16 +2,19 @@ import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
 import type { LucideIcon } from 'lucide-react'
 import {
   ChevronDownIcon,
+  CreditCardIcon,
   LanguagesIcon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
   SunIcon,
   SunMoonIcon,
+  UserIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useId, useState } from 'react'
-import { Button } from '@/components/ui/button.tsx'
+import { NavLink } from 'react-router'
+import { Button, buttonVariants } from '@/components/ui/button.tsx'
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/ui/popover.tsx'
 import { Separator } from '@/components/ui/separator.tsx'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
@@ -19,6 +22,11 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group.tsx'
 // Placeholders until the app has user data.
 const userName = 'User'
 const userEmail = 'user@example.com'
+
+const menuLinks: { label: string; to: string; icon: LucideIcon }[] = [
+  { label: 'Account', to: '/account', icon: UserIcon },
+  { label: 'Billing', to: '/billing', icon: CreditCardIcon },
+]
 
 const themeOptions: { value: string; label: string; icon: LucideIcon }[] = [
   { value: 'light', label: 'Light', icon: SunIcon },
@@ -69,15 +77,20 @@ function ToggleRow({ label, icon: Icon, value, onValueChange, children }: Toggle
 const toggleItemClassName =
   'h-full w-11 rounded-md px-0 text-muted-foreground aria-pressed:text-foreground'
 
+// Account, Billing and Log out share one 40px row style.
+const rowClassName = 'h-10 justify-start gap-2 px-2 text-sm font-normal'
+
 // A Popover, not a Menu: the Theme and Language button groups don't fit a Menu's arrow-key rows.
 function UserMenu() {
   // Placeholders: theming and translation are out of scope, so a choice changes nothing and lasts until reload.
   // The state lives here rather than in the panel, so it survives closing the panel.
   const [theme, setTheme] = useState('system')
   const [language, setLanguage] = useState('en')
+  // Controlled, so the links can close the panel. Base UI's Close would give them a button role.
+  const [open, setOpen] = useState(false)
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       {/* While open: muted background, then a darker border on desktop or a ring round the avatar on phones. */}
       <PopoverTrigger
         render={
@@ -103,6 +116,19 @@ function UserMenu() {
           <PopoverTitle className="text-base font-semibold">{userName}</PopoverTitle>
           <span className="text-xs text-muted-foreground">{userEmail}</span>
         </div>
+        <Separator />
+        {/* Picking a link closes the panel, even on its own page. NavLink sets aria-current, with no visible style. */}
+        {menuLinks.map(({ label, to, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={() => setOpen(false)}
+            className={buttonVariants({ variant: 'ghost', className: rowClassName })}
+          >
+            <Icon aria-hidden="true" />
+            {label}
+          </NavLink>
+        ))}
         <Separator />
         <ToggleRow label="Theme" icon={SunMoonIcon} value={theme} onValueChange={setTheme}>
           {themeOptions.map(({ value, label, icon: Icon }) => (
@@ -136,14 +162,7 @@ function UserMenu() {
         </ToggleRow>
         <Separator />
         {/* Auth is out of scope, so Log out only closes the panel for now. */}
-        <PopoverPrimitive.Close
-          render={
-            <Button
-              variant="ghost"
-              className="h-10 justify-start gap-2 px-2 text-sm font-normal"
-            />
-          }
-        >
+        <PopoverPrimitive.Close render={<Button variant="ghost" className={rowClassName} />}>
           <LogOutIcon aria-hidden="true" />
           Log out
         </PopoverPrimitive.Close>
