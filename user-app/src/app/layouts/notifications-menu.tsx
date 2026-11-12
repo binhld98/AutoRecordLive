@@ -1,4 +1,3 @@
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
 import { BellIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
@@ -116,17 +115,14 @@ function NotificationsMenu() {
             </li>
           ))}
         </ul>
-        <PopoverPrimitive.Close
-          nativeButton={false}
-          render={
-            <Link
-              to="/notifications"
-              className="flex h-12 shrink-0 items-center justify-center border-t font-semibold outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset dark:hover:bg-muted/50"
-            />
-          }
+        {/* A plain link, closed through state: Base UI's Close would give it a button role. */}
+        <Link
+          to="/notifications"
+          onClick={() => setOpen(false)}
+          className="flex h-12 shrink-0 items-center justify-center border-t font-semibold outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset dark:hover:bg-muted/50"
         >
           View all notifications
-        </PopoverPrimitive.Close>
+        </Link>
       </PopoverContent>
     </Popover>
   )
