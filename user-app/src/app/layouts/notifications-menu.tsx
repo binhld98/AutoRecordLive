@@ -1,6 +1,6 @@
 import { BellIcon } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button.tsx'
 import {
   Popover,
@@ -63,15 +63,8 @@ function NotificationRow({ title, detail, time, unread }: Notification) {
 
 // A Popover at every width. Width and height follow the space Base UI reports, up to 360px and 720px.
 function NotificationsMenu() {
-  const { pathname } = useLocation()
+  // Controlled, so the link can close the panel. Like the user menu and the drawer, only picking a link closes it.
   const [open, setOpen] = useState(false)
-  const [openedAt, setOpenedAt] = useState(pathname)
-
-  // Navigating by any route, back button included, closes the panel.
-  if (openedAt !== pathname) {
-    setOpenedAt(pathname)
-    setOpen(false)
-  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
