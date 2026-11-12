@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react'
 import {
   BellIcon,
   DownloadIcon,
@@ -7,12 +6,13 @@ import {
   VideoIcon,
   XIcon,
 } from 'lucide-react'
-import { Link, NavLink, useMatch } from 'react-router'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button.tsx'
 import { SheetClose } from '@/components/ui/sheet.tsx'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
@@ -21,13 +21,10 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar.tsx'
 import { TooltipProvider } from '@/components/ui/tooltip.tsx'
-
-type NavItem = {
-  label: string
-  to: string
-  icon: LucideIcon
-  end?: boolean
-}
+import type { NavItem } from './nav-menu-item.tsx'
+import NavMenuItem from './nav-menu-item.tsx'
+import PlanUsage from './plan-usage.tsx'
+import useCloseDrawerOnPick from './use-close-drawer-on-pick.ts'
 
 // Overview matches only `/`. The rest also match their child URLs, once areas have them.
 // Account and Billing live in the user menu, so no link here is active on their pages.
@@ -38,38 +35,6 @@ const navItems: NavItem[] = [
   { label: 'Exports', to: '/exports', icon: DownloadIcon },
   { label: 'Notifications', to: '/notifications', icon: BellIcon },
 ]
-
-// Picking a link in the phone drawer closes it; shadcn leaves it open.
-function useCloseDrawerOnPick() {
-  const { isMobile, setOpenMobile } = useSidebar()
-  return isMobile ? () => setOpenMobile(false) : undefined
-}
-
-// NavLink sets aria-current; useMatch, with the same rule, drives shadcn's active style.
-// Icons are 20px and text 16px everywhere. Links are 40px tall with 6px padding all around, in the drawer,
-// the sidebar and the rail, where shadcn's 32px width fits the icon. So icons don't move when the sidebar collapses.
-// shadcn shows the tooltip only in the rail, where the label is hidden. The drawer gets none:
-// there a focused link's hidden tooltip would still open and swallow the Esc that closes the drawer.
-function NavMenuItem({ label, to, icon: Icon, end = false }: NavItem) {
-  const { isMobile } = useSidebar()
-  const isActive = useMatch({ path: to, end }) !== null
-  const closeDrawer = useCloseDrawerOnPick()
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={isActive}
-        className="h-10 p-1.5 text-base data-active:font-semibold group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1.5! [&_svg]:size-5"
-        tooltip={isMobile ? undefined : label}
-        render={<NavLink to={to} end={end} />}
-        onClick={closeDrawer}
-      >
-        <Icon aria-hidden="true" />
-        <span>{label}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
 
 function AppSidebar() {
   const { isMobile } = useSidebar()
@@ -130,6 +95,10 @@ function AppSidebar() {
             </SidebarGroup>
           </nav>
         </SidebarContent>
+        {/* Outside the scrolling content, so the usage card stays pinned to the bottom. */}
+        <SidebarFooter>
+          <PlanUsage />
+        </SidebarFooter>
       </Sidebar>
     </TooltipProvider>
   )
