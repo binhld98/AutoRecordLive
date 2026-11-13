@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-LiveCatch helps repost creators and clippers capture moments from TikTok and Douyin live streams. Users follow channels, LiveCatch records their broadcasts automatically, and users select and download footage for their editor.
+LiveCatch helps repost creators and clippers capture moments from TikTok and Douyin live streams. Users add channels, LiveCatch records their broadcasts automatically, and users select and download footage for their editor.
 
 ## 2. Objectives and success criteria
 
@@ -49,11 +49,11 @@ The channel check watches listening channels and starts the recorder when one go
 
 ### Channels
 
-- **FR-5** Follow a channel by pasting one TikTok or Douyin link or `@username`, with a preview of the channel before saving.
+- **FR-5** Add a channel by pasting one TikTok or Douyin link or `@username`, with a preview of the channel before it is added.
 - **FR-6** Turn listening on or off per channel. A listening channel records every broadcast automatically while recording hours remain. Enabling listening while a channel is already live starts recording immediately, subject to plan limits; show that the recording begins partway through the broadcast and the earlier portion is not captured. Whenever listening turns off, by the user or by the app under this charter, any active recording stops immediately and keeps the captured portion. A listener the app turns off stays off until the user turns it back on.
 - **FR-7** The plan caps how many channels listen at once. When the cap is reached, the app says so and why.
 - **FR-8** Each channel shows whether it's live and when it was last checked.
-- **FR-9** Unfollow a channel. This stops any active recording as in FR-6. Its recordings stay until they expire.
+- **FR-9** Remove a channel. This stops any active recording as in FR-6. Its recordings stay until they expire.
 
 ### Recording
 
@@ -91,7 +91,7 @@ The channel check watches listening channels and starts the recorder when one go
 - **Background operation:** Monitoring, recording, processing, exports, notifications, and billing transitions run without the user's browser being open.
 - **Recovery:** Persist background job state across restarts and recover interrupted work. Retrying the same job must not duplicate recordings, exports, usage, or charges.
 - **Back-end enforcement:** The back end enforces authentication, ownership, plan limits, usage, and expiry for every operation, including direct playback and download links. Checks in the user app alone are not enough.
-- **Private access:** Account data, follow lists, recordings, and exports are private to each user.
+- **Private access:** Account data, channel lists, recordings, and exports are private to each user.
 - **Cleanup:** In the background, remove expired recordings and exports, and footage from recordings that failed processing (FR-12). Keep source footage while exports accepted before its expiry still need it.
 
 ## 6. Future enhancements
@@ -107,7 +107,7 @@ Ideas, not commitments:
 - Burned-in captions.
 - Transcripts, transcript search, and AI chapters.
 - Recording rules beyond listening on or off.
-- Following many channels in one paste.
+- Adding many channels in one paste.
 
 ## 7. Risks
 
