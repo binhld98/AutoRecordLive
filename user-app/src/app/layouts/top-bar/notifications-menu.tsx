@@ -1,7 +1,6 @@
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
 import { BellIcon } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button.tsx'
 import {
   Popover,
@@ -64,15 +63,8 @@ function NotificationRow({ title, detail, time, unread }: Notification) {
 
 // A Popover at every width. Width and height follow the space Base UI reports, up to 360px and 720px.
 function NotificationsMenu() {
-  const { pathname } = useLocation()
+  // Controlled, so the link can close the panel. Like the user menu and the drawer, only picking a link closes it.
   const [open, setOpen] = useState(false)
-  const [openedAt, setOpenedAt] = useState(pathname)
-
-  // Navigating by any route, back button included, closes the panel.
-  if (openedAt !== pathname) {
-    setOpenedAt(pathname)
-    setOpen(false)
-  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -116,17 +108,14 @@ function NotificationsMenu() {
             </li>
           ))}
         </ul>
-        <PopoverPrimitive.Close
-          nativeButton={false}
-          render={
-            <Link
-              to="/notifications"
-              className="flex h-12 shrink-0 items-center justify-center border-t font-semibold outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset dark:hover:bg-muted/50"
-            />
-          }
+        {/* A plain link, closed through state: Base UI's Close would give it a button role. */}
+        <Link
+          to="/notifications"
+          onClick={() => setOpen(false)}
+          className="flex h-12 shrink-0 items-center justify-center border-t font-semibold outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset dark:hover:bg-muted/50"
         >
           View all notifications
-        </PopoverPrimitive.Close>
+        </Link>
       </PopoverContent>
     </Popover>
   )

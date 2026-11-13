@@ -1,4 +1,4 @@
-import AppSidebarTrigger from './app-sidebar-trigger.tsx'
+import AppSidebarTrigger from '../sidebar/app-sidebar-trigger.tsx'
 import NotificationsMenu from './notifications-menu.tsx'
 import UserMenu from './user-menu.tsx'
 
