@@ -1,8 +1,8 @@
-# AutoRecordLive Application
+# LiveCatch Application
 
 ## Product
 
-The product is now called LiveCatch, and [`docs/charter.md`](docs/charter.md) is the source of truth for what it must do.
+[`docs/charter.md`](docs/charter.md) is the source of truth for what it must do.
 
 Build an application that lets users:
 
