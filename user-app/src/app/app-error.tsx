@@ -20,7 +20,7 @@ function AppError({ onRetry }: AppErrorProps) {
           <Button variant="outline" className="h-10 px-4" onClick={onRetry}>
             Try again
           </Button>
-          <a href="/" className={buttonVariants({ className: 'h-10 px-4' })}>
+          <a href={import.meta.env.BASE_URL} className={buttonVariants({ className: 'h-10 px-4' })}>
             Go to Overview
           </a>
         </div>
