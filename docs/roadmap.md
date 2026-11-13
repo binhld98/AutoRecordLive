@@ -1,6 +1,6 @@
 # Roadmap
 
-This is the plan for getting from today's Hello World SPA to an AutoRecordLive that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
+This is the plan for getting from today's Hello World SPA to an LiveCatch that works and is better than the reference app. It's split into small steps you can ship one PR at a time.
 
 - What the reference app does, and its known issues (R1–R42): [reference app study](./study/ref-app-study.md)
 - Stack, routes, and technical decisions: [user app architecture overview](./arch.md)

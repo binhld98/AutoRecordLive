@@ -60,7 +60,7 @@ Add this to `compilerOptions` in both `tsconfig.json` and `tsconfig.app.json`. `
 }
 ```
 
-Replace the contents of `src/index.css` with `@import "tailwindcss";`, and set the `<title>` in `index.html` to `AutoRecordLive`.
+Replace the contents of `src/index.css` with `@import "tailwindcss";`, and set the `<title>` in `index.html` to `LiveCatch`.
 
 ## 4. Initialize shadcn/ui
 
@@ -108,4 +108,4 @@ npm run lint
 npm run dev -- --host 127.0.0.1
 ```
 
-The build and lint should pass with no errors. At http://127.0.0.1:8484 you should see a centered "Hello World" in the Geist font, the tab title AutoRecordLive, and no console errors.
+The build and lint should pass with no errors. At http://127.0.0.1:8484 you should see a centered "Hello World" in the Geist font, the tab title LiveCatch, and no console errors.
