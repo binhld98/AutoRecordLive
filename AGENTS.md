@@ -6,7 +6,7 @@
 
 Build an application that lets users:
 
-- Follow hosts or channels by URL.
+- Add channels by URL.
 - Automatically record their live streams when they start broadcasting.
 - Store recordings so users can access and download them later.
 
@@ -14,7 +14,7 @@ Build an application that lets users:
 
 This repository holds only the user app. The back end, admin console, and landing pages are out of scope.
 
-- `user-app/` — the user app, where users follow hosts and watch and download recordings.
+- `user-app/` — the user app, where users add channels and watch and download recordings.
 - `docs/` — draft product, architecture, and development docs. Don't follow them unless the user asks. The exception is `docs/charter.md`, which is authoritative.
 
 ## Task Tracking
@@ -25,6 +25,9 @@ Work is tracked on Trello, with one board per sprint.
 | --- | --- |
 | `S0` | [Phase 0 - Concept/Requirements](https://trello.com/b/AWtmVjbe/phase-0-concept-requirements) |
 | `S1` | [Sprint 1 - App Shell](https://trello.com/b/4mU9eMMY/sprint-1-app-shell) |
+| `S2` | [Sprint 2 - Channels](https://trello.com/b/lNKyrJkq/sprint-2-channels) |
+
+Requirements and design cards for every feature go on the `S0` board. Sprint boards hold development, quality assurance, and deployment cards.
 
 Rules for every board:
 
@@ -36,7 +39,7 @@ Rules for every board:
 ## Development Workflow
 
 - `main` is the only long-lived branch and must stay releasable.
-- Do each piece of work in its own `<type>/<slug>` branch from `main`, such as `feat/follow-channel`.
+- Do each piece of work in its own `<type>/<slug>` branch from `main`, such as `feat/add-channel`.
 - When the user approves the work, commit it, push the branch, and open a PR into `main`.
 - Never merge the PR yourself. The user squash merges and deletes the remote branch on GitHub.
 - When the user confirms the PR is done, switch to `main`, pull it, and delete the local branch.
