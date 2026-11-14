@@ -2,31 +2,37 @@
 
 LiveCatch records live streams for you. Follow a host or channel by URL, and the app records each broadcast automatically when it goes live. Recordings are stored so you can watch or download them later.
 
-See the [product charter](docs/charter.md) for what it does and what v1 covers.
+This repository holds only the user app: a React + TypeScript SPA built with Vite. Users sign in here, manage the hosts and channels they follow, review and download recordings, manage notifications, and view their account and plan. The back end, admin console, and landing pages are out of scope.
 
-## Repository layout
+## Prerequisites
 
-This repository holds only the user app. The back end, admin console, and landing pages are out of scope.
+- A Node.js version supported by [Vite](https://vite.dev/guide/#scaffolding-your-first-vite-project)
+- npm
 
-| Path | Contents |
-| --- | --- |
-| [`user-app/`](user-app/) | The user app: React + TypeScript, built with Vite. |
-| [`docs/`](docs/) | Product, architecture, and development documentation. |
-
-## Getting started
-
-Run the user app locally:
+## Quick start
 
 ```bash
-cd user-app
 npm install
 npm run dev
 ```
 
 The development server runs at <http://localhost:8484>.
 
-## Documentation
+## Scripts
 
-## Contributing
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server on port 8484 |
+| `npm run build` | Type-check with `tsc -b` and build production assets into `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Lint the source with oxlint |
 
-See [AGENTS.md](AGENTS.md) for the task tracking, development workflow and commit message conventions.
+## UI components
+
+UI primitives come from [shadcn/ui](https://ui.shadcn.com/) and are configured in `components.json`. Add components as screens need them:
+
+```bash
+npx shadcn@latest add button
+```
+
+Generated components go in `src/components/ui/`. They are owned by this codebase and can be edited freely.
